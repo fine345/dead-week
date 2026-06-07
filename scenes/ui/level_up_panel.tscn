@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://ctcvd8wy0rnhn"]
+
+[node name="LevelUpPanel" type="Control" unique_id=517495123]
+layout_mode = 3
+anchors_preset = 0
+
+[node name="Dim" type="ColorRect" parent="." unique_id=403452976]
+layout_mode = 0
+color = Color(0, 0, 0, 0.65)
+
+[node name="Panel" type="PanelContainer" parent="." unique_id=862173448]
+layout_mode = 0
+offset_left = 210.0
+offset_top = 520.0
+offset_right = 510.0
+offset_bottom = 920.0
+
+[node name="VBox" type="VBoxContainer" parent="Panel" unique_id=1448595298]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Panel/VBox" unique_id=316930375]
+layout_mode = 2
+text = "LEVEL UP"
+horizontal_alignment = 1
+
+[node name="Desc" type="Label" parent="Panel/VBox" unique_id=920807338]
+layout_mode = 2
+text = "Choose one reward"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Option1" type="Button" parent="Panel/VBox" unique_id=708834393]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Reward A"
+
+[node name="Option2" type="Button" parent="Panel/VBox" unique_id=467037946]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Reward B"
+
+[node name="Option3" type="Button" parent="Panel/VBox" unique_id=312687288]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Reward C"

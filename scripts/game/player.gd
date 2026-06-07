@@ -36,17 +36,21 @@ func set_game(game_ref: Node) -> void:
 
 func collect_experience(value: int) -> void:
 	experience += value
-	_try_level_up()
+	var leveled_up := _try_level_up()
+	if leveled_up and game != null and game.has_method("_on_player_level_up"):
+		game._on_player_level_up()
 	if game != null and game.has_method("_update_hud"):
 		game._update_hud()
 
-func _try_level_up() -> void:
+func _try_level_up() -> bool:
+	var leveled_up := false
 	var required_experience := 25 * level
 	while experience >= required_experience:
 		experience -= required_experience
 		level += 1
+		leveled_up = true
 		required_experience = 25 * level
-
+	return leveled_up
 func take_damage(amount: int) -> void:
 	if is_dead or invincible_time > 0.0:
 		return
@@ -88,6 +92,8 @@ func _process(delta: float) -> void:
 		invincible_time = maxf(invincible_time - delta, 0.0)
 		if invincible_time <= 0.0:
 			modulate = Color(1.0, 1.0, 1.0, 1.0)
+	if get_tree() != null and get_tree().paused:
+		return
 	if attack_cooldown > 0.0:
 		attack_cooldown = maxf(attack_cooldown - delta, 0.0)
 	if attack_cooldown <= 0.0 and not is_leveling:

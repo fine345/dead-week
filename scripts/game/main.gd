@@ -4,28 +4,56 @@ const PLAYER_SCENE := preload("res://scenes/game/player.tscn")
 const ENEMY_SCENE := preload("res://scenes/game/enemy.tscn")
 const EXPERIENCE_SCENE := preload("res://scenes/game/experience.tscn")
 
-@export var enemy_spawn_interval := 1.5
+@export var enemy_one_spawn_interval := 1.5
+@export var enemy_two_spawn_interval := 3.0
 @export var enemy_spawn_distance := Vector2(1800.0, 1000.0)
 @export var enemy_spawn_min_distance := 200.0
+@export var enemy_density_slowdown := 0.03
+@export var enemy_time_relief_start := 60.0
+@export var enemy_time_relief_full := 300.0
 
 var player: CharacterBody2D
 var world_bounds := Rect2(Vector2.ZERO, Vector2(720, 1440))
 var spawned_enemies: Array[Node] = []
 var spawned_experiences: Array[Node] = []
 var experience_cleanup_enabled := true
+var elapsed_time := 0.0
+var enemy_two_unlocked := false
 
-@onready var enemy_timer: Timer = $EnemyTimer
+@onready var enemy_one_timer: Timer = $EnemyTimer
+@onready var enemy_two_timer: Timer = Timer.new()
 @onready var hud_info: Label = $HUD/Info
 @onready var hud_restart_hint: Label = $HUD/RestartHint
 @onready var hud_game_over: Label = $HUD/GameOver
+@onready var level_up_panel: Control = $HUD/LevelUpPanel
 
 func _ready() -> void:
 	spawn_player()
-	enemy_timer.wait_time = enemy_spawn_interval
-	if not enemy_timer.timeout.is_connected(_spawn_enemy):
-		enemy_timer.timeout.connect(_spawn_enemy)
-	enemy_timer.start()
+	_setup_timers()
+	if level_up_panel != null and level_up_panel.has_signal("reward_selected") and not level_up_panel.reward_selected.is_connected(_on_reward_selected):
+		level_up_panel.reward_selected.connect(_on_reward_selected)
+	if level_up_panel != null:
+		level_up_panel.visible = false
+	elapsed_time = 0.0
+	enemy_two_unlocked = false
 	_update_hud()
+
+func _setup_timers() -> void:
+	enemy_one_timer.wait_time = enemy_one_spawn_interval
+	if not enemy_one_timer.timeout.is_connected(_spawn_enemy_one):
+		enemy_one_timer.timeout.connect(_spawn_enemy_one)
+	if not enemy_one_timer.is_stopped():
+		enemy_one_timer.stop()
+	enemy_one_timer.start()
+	if enemy_two_timer.get_parent() == null:
+		add_child(enemy_two_timer)
+	enemy_two_timer.one_shot = false
+	enemy_two_timer.wait_time = enemy_two_spawn_interval
+	if not enemy_two_timer.timeout.is_connected(_spawn_enemy_two):
+		enemy_two_timer.timeout.connect(_spawn_enemy_two)
+	if not enemy_two_timer.is_stopped():
+		enemy_two_timer.stop()
+	enemy_two_timer.start()
 
 func get_nearest_enemy(origin: Vector2, max_distance: float) -> Node2D:
 	var nearest: Node2D = null
@@ -45,10 +73,19 @@ func spawn_player() -> void:
 	add_child(player)
 	player.set_game(self)
 
-func _spawn_enemy() -> void:
+func _spawn_enemy_one() -> void:
+	_spawn_enemy(1)
+
+func _spawn_enemy_two() -> void:
+	if not enemy_two_unlocked:
+		return
+	_spawn_enemy(2)
+
+func _spawn_enemy(enemy_type: int) -> void:
 	if player == null or player.is_dead:
 		return
 	var enemy := ENEMY_SCENE.instantiate()
+	enemy.enemy_type = enemy_type
 	var offset := _get_spawn_offset()
 	enemy.position = player.position + offset
 	add_child(enemy)
@@ -77,11 +114,32 @@ func _get_spawn_offset() -> Vector2:
 		offset = offset.normalized() * enemy_spawn_min_distance
 	return offset
 
+func _update_spawn_timers() -> void:
+	var pressure_factor := 1.0 + float(spawned_enemies.size()) * enemy_density_slowdown
+	var time_factor := _get_time_relief_factor()
+	var effective_enemy_one_interval := enemy_one_spawn_interval * pressure_factor * time_factor
+	var effective_enemy_two_interval := enemy_two_spawn_interval * pressure_factor * time_factor
+	if enemy_one_timer != null:
+		enemy_one_timer.wait_time = maxf(effective_enemy_one_interval, 0.2)
+	if enemy_two_timer != null:
+		enemy_two_timer.wait_time = maxf(effective_enemy_two_interval, 0.4)
+
+func _get_time_relief_factor() -> float:
+	if elapsed_time <= enemy_time_relief_start:
+		return 1.0
+	var clamped_time := clampf(elapsed_time, enemy_time_relief_start, enemy_time_relief_full)
+	var progress := inverse_lerp(enemy_time_relief_start, enemy_time_relief_full, clamped_time)
+	return lerpf(1.0, 0.55, progress)
+
 func on_enemy_died(enemy: Node) -> void:
 	spawned_enemies.erase(enemy)
 	if enemy != null:
-		_spawn_experience(enemy.global_position, 5)
+		var drop_value := 5
+		if enemy.has_method("get"):
+			drop_value = int(enemy.get("experience_drop"))
+		_spawn_experience(enemy.global_position, drop_value)
 	_update_hud()
+	_update_spawn_timers()
 
 func _spawn_experience(position: Vector2, value: int) -> void:
 	if not experience_cleanup_enabled:
@@ -101,10 +159,39 @@ func _on_experience_tree_exited(experience: Node) -> void:
 func _on_enemy_tree_exited(enemy: Node) -> void:
 	spawned_enemies.erase(enemy)
 	_update_hud()
+	_update_spawn_timers()
 
 func _process(delta: float) -> void:
+	elapsed_time += delta
+	enemy_two_unlocked = elapsed_time >= enemy_time_relief_start
+	_update_spawn_timers()
 	if Input.is_key_pressed(KEY_R) and player != null and player.is_dead:
 		_restart_game()
+	_update_hud()
+
+func _on_player_level_up() -> void:
+	if player == null:
+		return
+	_pause_for_level_up()
+
+func _on_reward_selected(reward_id: String) -> void:
+	if player == null:
+		return
+	match reward_id:
+		"move_speed":
+			player.move_speed += 20.0
+		"attack_speed":
+			player.attack_interval = maxf(player.attack_interval - 0.1, 0.2)
+		"pickup_range":
+			player.pickup_range += 20.0
+	if level_up_panel != null:
+		level_up_panel.visible = false
+		level_up_panel.process_mode = Node.PROCESS_MODE_INHERIT
+	if enemy_one_timer != null:
+		enemy_one_timer.paused = false
+	if enemy_two_timer != null:
+		enemy_two_timer.paused = false
+	get_tree().paused = false
 	_update_hud()
 
 func _update_hud() -> void:
@@ -130,10 +217,25 @@ func _restart_game() -> void:
 	player = null
 	spawn_player()
 	experience_cleanup_enabled = true
-	enemy_timer.start()
+	elapsed_time = 0.0
+	enemy_two_unlocked = false
+	if enemy_one_timer != null:
+		enemy_one_timer.start()
+	if enemy_two_timer != null:
+		enemy_two_timer.start()
 	_update_hud()
 
 func collect_experience(value: int) -> void:
 	if player != null and player.has_method("collect_experience"):
 		player.collect_experience(value)
 	_update_hud()
+
+func _pause_for_level_up() -> void:
+	get_tree().paused = true
+	if level_up_panel != null:
+		level_up_panel.visible = true
+		level_up_panel.process_mode = Node.PROCESS_MODE_ALWAYS
+	if enemy_one_timer != null:
+		enemy_one_timer.paused = true
+	if enemy_two_timer != null:
+		enemy_two_timer.paused = true

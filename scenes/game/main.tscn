@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://dyvgsv0f01a1a"]
 
 [ext_resource type="Script" uid="uid://cgag7c0dle264" path="res://scripts/game/main.gd" id="1_llaio"]
+[ext_resource type="PackedScene" uid="uid://ctcvd8wy0rnhn" path="res://scenes/ui/level_up_panel.tscn" id="2_oekm8"]
+[ext_resource type="Script" uid="uid://wu0bqi1u3elk" path="res://scripts/game/level_up_panel.gd" id="3_yd8kv"]
 
 [node name="Main" type="Node2D" unique_id=1706105945]
 script = ExtResource("1_llaio")
@@ -35,3 +37,7 @@ offset_top = 700.0
 offset_right = 260.0
 offset_bottom = 700.0
 text = "GAME OVER"
+
+[node name="LevelUpPanel" parent="HUD" unique_id=517495123 instance=ExtResource("2_oekm8")]
+visible = false
+script = ExtResource("3_yd8kv")

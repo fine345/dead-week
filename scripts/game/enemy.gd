@@ -5,6 +5,7 @@ extends CharacterBody2D
 @export var touch_range := 18.0
 @export var max_health := 30
 @export var experience_drop := 5
+@export var enemy_type := 1
 
 var target: Node2D
 var game: Node = null
@@ -12,7 +13,30 @@ var health := 30
 var is_dead := false
 
 func _ready() -> void:
+	_apply_enemy_type()
 	health = max_health
+	_apply_enemy_visual()
+
+func _apply_enemy_visual() -> void:
+	var visual: ColorRect = $Visual
+	if visual == null:
+		return
+	match enemy_type:
+		2:
+			visual.color = Color(0.95, 0.55, 0.2, 1.0)
+		_:
+			visual.color = Color(0.9, 0.2, 0.3, 1.0)
+
+func _apply_enemy_type() -> void:
+	match enemy_type:
+		2:
+			max_health = 50
+			move_speed = 75.0
+			experience_drop = 10
+		_:
+			max_health = 30
+			move_speed = 100.0
+			experience_drop = 5
 
 func set_game(game_ref: Node) -> void:
 	game = game_ref
