@@ -19,9 +19,23 @@ config/icon="res://icon.svg"
 
 MCPRuntime="*uid://c8dfcidpqvwq8"
 
+[display]
+
+window/size/viewport_width=720
+window/size/viewport_height=1440
+window/stretch/mode="viewport"
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/godot_mcp/plugin.cfg")
+
+[input]
+
+attack={
+"deadzone": 0.5,
+"events": Array[InputEvent]([Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":32,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+])
+}
 
 [physics]
 

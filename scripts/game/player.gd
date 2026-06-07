@@ -22,6 +22,14 @@ func _ready() -> void:
 	health = max_health
 	set_physics_process(true)
 	set_process(true)
+	call_deferred("_activate_camera")
+
+func _activate_camera() -> void:
+	var camera: Camera2D = $Camera2D
+	if camera != null:
+		camera.enabled = true
+		camera.position = Vector2.ZERO
+		camera.make_current()
 
 func set_game(game_ref: Node) -> void:
 	game = game_ref
@@ -94,3 +102,6 @@ func _physics_process(delta: float) -> void:
 	direction.y = Input.get_action_strength("ui_down") - Input.get_action_strength("ui_up")
 	velocity = direction.normalized() * move_speed if direction != Vector2.ZERO else Vector2.ZERO
 	move_and_slide()
+	var camera: Camera2D = $Camera2D
+	if camera != null and not camera.is_current():
+		camera.make_current()

@@ -5,7 +5,7 @@ const ENEMY_SCENE := preload("res://scenes/game/enemy.tscn")
 const EXPERIENCE_SCENE := preload("res://scenes/game/experience.tscn")
 
 @export var enemy_spawn_interval := 1.5
-@export var enemy_spawn_distance := Vector2(900.0, 500.0)
+@export var enemy_spawn_distance := Vector2(1800.0, 1000.0)
 @export var enemy_spawn_min_distance := 200.0
 
 var player: CharacterBody2D
@@ -49,9 +49,7 @@ func _spawn_enemy() -> void:
 	if player == null or player.is_dead:
 		return
 	var enemy := ENEMY_SCENE.instantiate()
-	var offset := Vector2(randf_range(-enemy_spawn_distance.x, enemy_spawn_distance.x), randf_range(-enemy_spawn_distance.y, enemy_spawn_distance.y))
-	if offset.length() < enemy_spawn_min_distance:
-		offset = offset.normalized() * enemy_spawn_min_distance
+	var offset := _get_spawn_offset()
 	enemy.position = player.position + offset
 	add_child(enemy)
 	spawned_enemies.append(enemy)
@@ -60,6 +58,24 @@ func _spawn_enemy() -> void:
 	if enemy.has_signal("tree_exited"):
 		enemy.tree_exited.connect(_on_enemy_tree_exited.bind(enemy))
 	enemy.set_target(player)
+
+func _get_spawn_offset() -> Vector2:
+	var half_width := enemy_spawn_distance.x * 0.5
+	var half_height := enemy_spawn_distance.y * 0.5
+	var side := randi_range(0, 3)
+	var offset := Vector2.ZERO
+	match side:
+		0:
+			offset = Vector2(randf_range(-half_width, half_width), -half_height)
+		1:
+			offset = Vector2(randf_range(-half_width, half_width), half_height)
+		2:
+			offset = Vector2(-half_width, randf_range(-half_height, half_height))
+		_:
+			offset = Vector2(half_width, randf_range(-half_height, half_height))
+	if offset.length() < enemy_spawn_min_distance:
+		offset = offset.normalized() * enemy_spawn_min_distance
+	return offset
 
 func on_enemy_died(enemy: Node) -> void:
 	spawned_enemies.erase(enemy)
