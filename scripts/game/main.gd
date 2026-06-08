@@ -3,6 +3,7 @@ extends Node2D
 const PLAYER_SCENE := preload("res://scenes/game/player.tscn")
 const ENEMY_SCENE := preload("res://scenes/game/enemy.tscn")
 const EXPERIENCE_SCENE := preload("res://scenes/game/experience.tscn")
+const REWARD_POOL_SCRIPT := preload("res://scripts/game/reward_pool.gd")
 
 @export var enemy_one_spawn_interval := 1.5
 @export var enemy_two_spawn_interval := 3.0
@@ -19,6 +20,9 @@ var spawned_experiences: Array[Node] = []
 var experience_cleanup_enabled := true
 var elapsed_time := 0.0
 var enemy_two_unlocked := false
+var reward_pool: Node = null
+var reward_counts: Dictionary = {}
+var pending_reward_options: Array[String] = []
 
 @onready var enemy_one_timer: Timer = $EnemyTimer
 @onready var enemy_two_timer: Timer = Timer.new()
@@ -28,6 +32,7 @@ var enemy_two_unlocked := false
 @onready var level_up_panel: Control = $HUD/LevelUpPanel
 
 func _ready() -> void:
+	reward_pool = REWARD_POOL_SCRIPT.new()
 	spawn_player()
 	_setup_timers()
 	if level_up_panel != null and level_up_panel.has_signal("reward_selected") and not level_up_panel.reward_selected.is_connected(_on_reward_selected):
@@ -115,8 +120,8 @@ func _get_spawn_offset() -> Vector2:
 	return offset
 
 func _update_spawn_timers() -> void:
-	var pressure_factor := 1.0 + float(spawned_enemies.size()) * enemy_density_slowdown
-	var time_factor := _get_time_relief_factor()
+	var pressure_factor: float = 1.0 + float(spawned_enemies.size()) * enemy_density_slowdown
+	var time_factor: float = _get_time_relief_factor()
 	var effective_enemy_one_interval := enemy_one_spawn_interval * pressure_factor * time_factor
 	var effective_enemy_two_interval := enemy_two_spawn_interval * pressure_factor * time_factor
 	if enemy_one_timer != null:
@@ -128,7 +133,7 @@ func _get_time_relief_factor() -> float:
 	if elapsed_time <= enemy_time_relief_start:
 		return 1.0
 	var clamped_time := clampf(elapsed_time, enemy_time_relief_start, enemy_time_relief_full)
-	var progress := inverse_lerp(enemy_time_relief_start, enemy_time_relief_full, clamped_time)
+	var progress: float = inverse_lerp(enemy_time_relief_start, enemy_time_relief_full, clamped_time)
 	return lerpf(1.0, 0.55, progress)
 
 func on_enemy_died(enemy: Node) -> void:
@@ -172,18 +177,15 @@ func _process(delta: float) -> void:
 func _on_player_level_up() -> void:
 	if player == null:
 		return
+	_prepare_reward_offers()
 	_pause_for_level_up()
 
 func _on_reward_selected(reward_id: String) -> void:
 	if player == null:
 		return
-	match reward_id:
-		"move_speed":
-			player.move_speed += 20.0
-		"attack_speed":
-			player.attack_interval = maxf(player.attack_interval - 0.1, 0.2)
-		"pickup_range":
-			player.pickup_range += 20.0
+	_apply_reward(reward_id)
+	if reward_counts.has(reward_id):
+		reward_counts[reward_id] = int(reward_counts.get(reward_id, 0)) + 1
 	if level_up_panel != null:
 		level_up_panel.visible = false
 		level_up_panel.process_mode = Node.PROCESS_MODE_INHERIT
@@ -229,6 +231,24 @@ func collect_experience(value: int) -> void:
 	if player != null and player.has_method("collect_experience"):
 		player.collect_experience(value)
 	_update_hud()
+
+func _prepare_reward_offers() -> void:
+	if reward_pool == null or level_up_panel == null:
+		return
+	var choices: Array[Dictionary] = reward_pool.get_offer_choices(reward_counts, 3)
+	pending_reward_options.clear()
+	var display_titles: Array[String] = []
+	for choice in choices:
+		var reward_id := str(choice["id"])
+		pending_reward_options.append(reward_id)
+		display_titles.append(reward_pool.get_reward_title(reward_id))
+	level_up_panel.call("set_rewards", pending_reward_options, display_titles)
+
+func _apply_reward(reward_id: String) -> void:
+	if player == null:
+		return
+	if player.has_method("apply_reward_effect"):
+		player.apply_reward_effect(reward_id)
 
 func _pause_for_level_up() -> void:
 	get_tree().paused = true

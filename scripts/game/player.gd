@@ -5,6 +5,10 @@ extends CharacterBody2D
 @export var attack_interval := 0.75
 @export var attack_range := 420.0
 @export var pickup_range := 100.0
+@export var bullet_damage_multiplier := 1.0
+@export var bullet_count := 1
+@export var experience_bonus_multiplier := 1.0
+var shield_count := 0
 
 var health := 5
 var game: Node = null
@@ -51,8 +55,48 @@ func _try_level_up() -> bool:
 		leveled_up = true
 		required_experience = 25 * level
 	return leveled_up
+
+func apply_reward_effect(reward_id: String) -> void:
+	match reward_id:
+		"bullet_damage":
+			bullet_damage_multiplier += 0.5
+		"pickup_range":
+			pickup_range += 25.0
+		"attack_speed":
+			attack_interval = maxf(attack_interval * 0.5, 0.15)
+		"bullet_count":
+			bullet_count += 1
+		"experience_bonus":
+			experience_bonus_multiplier += 0.25
+		"shield":
+			shield_count += 1
+		"freeze_chance":
+			pass
+		"burn_chance":
+			pass
+		"bounce_count":
+			pass
+		"knockback":
+			pass
+
+func has_shield() -> bool:
+	return shield_count > 0
+
+func consume_shield() -> bool:
+	if shield_count <= 0:
+		return false
+	shield_count -= 1
+	return true
+
 func take_damage(amount: int) -> void:
 	if is_dead or invincible_time > 0.0:
+		return
+	if has_shield():
+		consume_shield()
+		invincible_time = 0.4
+		modulate = Color(0.7, 0.9, 1.0, 1.0)
+		if game != null and game.has_method("_update_hud"):
+			game._update_hud()
 		return
 	health = max(health - amount, 0)
 	invincible_time = 0.4
@@ -76,14 +120,21 @@ func _try_auto_attack() -> void:
 func _fire_bullet(target: Node2D) -> void:
 	if target == null or not is_instance_valid(target):
 		return
-	var bullet := BULLET_SCENE.instantiate()
-	bullet.global_position = global_position
-	bullet.set_target(target)
-	bullet.set_owner_player(self)
-	if game != null:
-		game.add_child(bullet)
-	else:
-		add_child(bullet)
+	var shots: int = max(1, bullet_count)
+	for i in range(shots):
+		var bullet := BULLET_SCENE.instantiate()
+		bullet.global_position = global_position
+		bullet.damage = int(10 * bullet_damage_multiplier)
+		bullet.set_target(target)
+		bullet.set_owner_player(self)
+		if bullet.has_method("set_status_modifiers"):
+			var bounce_value: int = max(0, bullet_count - 1)
+			bullet.set_status_modifiers(experience_bonus_multiplier, 0.0, 0.0, bounce_value, false)
+		if game != null:
+			game.add_child(bullet)
+		else:
+			add_child(bullet)
+
 
 func _process(delta: float) -> void:
 	if is_dead:

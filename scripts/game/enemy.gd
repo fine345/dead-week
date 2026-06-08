@@ -11,6 +11,11 @@ var target: Node2D
 var game: Node = null
 var health := 30
 var is_dead := false
+var freeze_timer := 0.0
+var burn_timer := 0.0
+var burn_tick_timer := 0.0
+var burn_damage_per_tick := 1
+var knockback_velocity := Vector2.ZERO
 
 func _ready() -> void:
 	_apply_enemy_type()
@@ -26,6 +31,17 @@ func _apply_enemy_visual() -> void:
 			visual.color = Color(0.95, 0.55, 0.2, 1.0)
 		_:
 			visual.color = Color(0.9, 0.2, 0.3, 1.0)
+
+func apply_freeze(duration: float) -> void:
+	freeze_timer = maxf(freeze_timer, duration)
+
+func apply_burn(duration: float, damage_per_tick: int = 1) -> void:
+	burn_timer = maxf(burn_timer, duration)
+	burn_tick_timer = 0.0
+	burn_damage_per_tick = damage_per_tick
+
+func apply_knockback(from_position: Vector2, force: float) -> void:
+	knockback_velocity = (global_position - from_position).normalized() * force
 
 func _apply_enemy_type() -> void:
 	match enemy_type:
@@ -63,6 +79,23 @@ func _die() -> void:
 func _physics_process(delta: float) -> void:
 	if is_dead:
 		velocity = Vector2.ZERO
+		return
+	if freeze_timer > 0.0:
+		freeze_timer = maxf(freeze_timer - delta, 0.0)
+		velocity = knockback_velocity
+		knockback_velocity = knockback_velocity.lerp(Vector2.ZERO, clamp(delta * 3.0, 0.0, 1.0))
+		move_and_slide()
+		return
+	if burn_timer > 0.0:
+		burn_timer = maxf(burn_timer - delta, 0.0)
+		burn_tick_timer += delta
+		if burn_tick_timer >= 1.0:
+			burn_tick_timer -= 1.0
+			take_damage(burn_damage_per_tick)
+	if knockback_velocity.length() > 0.5:
+		velocity = knockback_velocity
+		knockback_velocity = knockback_velocity.lerp(Vector2.ZERO, clamp(delta * 5.0, 0.0, 1.0))
+		move_and_slide()
 		return
 	if target == null or not is_instance_valid(target):
 		velocity = Vector2.ZERO
