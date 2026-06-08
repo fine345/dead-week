@@ -9,7 +9,7 @@ const REWARD_DEFS := [
 	},
 	{
 		"id": "pickup_range",
-		"title": "拾取范围 +25%",
+		"title": "拾取范围 +50%",
 		"type": "attribute",
 		"max_count": 2
 	},
@@ -27,7 +27,7 @@ const REWARD_DEFS := [
 	},
 	{
 		"id": "experience_bonus",
-		"title": "经验球经验 +25%",
+		"title": "经验球经验 +50%",
 		"type": "attribute",
 		"max_count": 2
 	},
@@ -67,16 +67,20 @@ const REWARD_DEFS := [
 func get_offer_choices(existing_counts: Dictionary, offer_count: int = 3) -> Array[Dictionary]:
 	var available: Array[Dictionary] = []
 	for reward in REWARD_DEFS:
-		var current_count := int(existing_counts.get(reward.id, 0))
-		if reward.has("repeatable") and bool(reward.repeatable):
-			available.append(reward)
-		elif current_count < int(reward.max_count):
+		var reward_id: String = str(reward["id"])
+		var current_count: int = int(existing_counts.get(reward_id, 0))
+		var max_count: int = int(reward["max_count"])
+		var repeatable: bool = reward.has("repeatable") and bool(reward["repeatable"])
+		if repeatable:
+			if current_count < max_count:
+				available.append(reward)
+		elif current_count < max_count:
 			available.append(reward)
 
 	var choices: Array[Dictionary] = []
 	var pool: Array[Dictionary] = available.duplicate()
 	while choices.size() < offer_count and pool.size() > 0:
-		var index := randi() % pool.size()
+		var index: int = randi() % pool.size()
 		choices.append(pool[index])
 		pool.remove_at(index)
 	return choices

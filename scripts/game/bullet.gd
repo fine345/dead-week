@@ -4,22 +4,27 @@ extends Area2D
 @export var damage := 10
 @export var lifetime := 5.0
 @export var turn_speed := 10.0
+@export var bounce_search_radius := 150.0
 
 var target: Node2D
 var owner_player: Node = null
+var game: Node = null
 var current_velocity: Vector2 = Vector2.ZERO
 var initial_direction: Vector2 = Vector2.RIGHT
 var experience_bonus_multiplier := 1.0
 var freeze_chance := 0.0
 var burn_chance := 0.0
 var bounce_count := 0
+var damage_multiplier := 1.0
 var knockback_enabled := false
-var hit_count := 0
-var has_applied_effects := false
 var spawned_at := 0.0
 var spawn_delay := 0.0
 var use_target_homing := true
-var can_collide := false
+var bounced_targets: Array[Node2D] = []
+var already_bounced := 0
+var pending_bounce_target: Node2D = null
+
+const BULLET_SCENE := preload("res://scenes/game/bullet.tscn")
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
@@ -31,7 +36,6 @@ func _ready() -> void:
 		if initial_direction == Vector2.ZERO:
 			initial_direction = Vector2.RIGHT
 	use_target_homing = spawn_delay <= 0.0
-	can_collide = spawn_delay <= 0.0
 	var timer := Timer.new()
 	timer.one_shot = true
 	timer.wait_time = lifetime
@@ -56,6 +60,8 @@ func set_target(target_node: Node2D) -> void:
 
 func set_owner_player(owner_node: Node) -> void:
 	owner_player = owner_node
+	if owner_node != null and owner_node.has_method("get"):
+		game = owner_node.get("game")
 
 func set_status_modifiers(exp_bonus: float, freeze_prob: float = 0.0, burn_prob: float = 0.0, bounce: int = 0, knockback: bool = false) -> void:
 	experience_bonus_multiplier = exp_bonus
@@ -64,18 +70,22 @@ func set_status_modifiers(exp_bonus: float, freeze_prob: float = 0.0, burn_prob:
 	bounce_count = bounce
 	knockback_enabled = knockback
 
+func set_damage_multiplier(multiplier: float) -> void:
+	damage_multiplier = multiplier
+	damage = int(round(damage * damage_multiplier))
+
 func _physics_process(delta: float) -> void:
-	var age := Time.get_ticks_msec() / 1000.0 - spawned_at
+	var age: float = Time.get_ticks_msec() / 1000.0 - spawned_at
 	if age >= lifetime:
 		queue_free()
 		return
 	if spawn_delay > 0.0 and age < spawn_delay:
 		return
 	if use_target_homing and target != null and is_instance_valid(target):
-		var desired_direction := global_position.direction_to(target.global_position)
+		var desired_direction: Vector2 = global_position.direction_to(target.global_position)
 		if desired_direction == Vector2.ZERO:
 			desired_direction = current_velocity.normalized() if current_velocity != Vector2.ZERO else Vector2.RIGHT
-		var desired_velocity := desired_direction.normalized() * move_speed
+		var desired_velocity: Vector2 = desired_direction.normalized() * move_speed
 		current_velocity = current_velocity.lerp(desired_velocity, clamp(turn_speed * delta, 0.0, 1.0))
 	else:
 		if use_target_homing:
@@ -93,14 +103,73 @@ func _physics_process(delta: float) -> void:
 func _on_body_entered(body: Node) -> void:
 	if body == owner_player:
 		return
-	if body != null and body.has_method("take_damage"):
-		if body.has_method("apply_knockback") and knockback_enabled:
-			body.apply_knockback(global_position, 180.0)
-		if body.has_method("apply_freeze") and freeze_chance > 0.0 and randf() < freeze_chance:
-			body.apply_freeze(2.0)
-		if body.has_method("apply_burn") and burn_chance > 0.0 and randf() < burn_chance:
-			body.apply_burn(5.0, 1)
-		body.take_damage(damage)
-		hit_count += 1
-		if hit_count > bounce_count:
-			queue_free()
+	if body == null or not body.has_method("take_damage"):
+		return
+	if body is Node2D and bounced_targets.has(body):
+		return
+	if body.has_method("apply_knockback") and knockback_enabled:
+		body.apply_knockback(global_position, 180.0)
+	if body.has_method("apply_freeze") and freeze_chance > 0.0 and randf() < freeze_chance:
+		body.apply_freeze(2.0)
+	if body.has_method("apply_burn") and burn_chance > 0.0 and randf() < burn_chance:
+		body.apply_burn(5.0, 1)
+	body.take_damage(damage)
+	if body is Node2D:
+		bounced_targets.append(body)
+	if already_bounced >= bounce_count:
+		queue_free()
+		return
+	var next_target: Node2D = _find_bounce_target(body)
+	if next_target == null:
+		queue_free()
+		return
+	already_bounced += 1
+	pending_bounce_target = next_target
+	_spawn_bounce_bullet()
+
+func _find_bounce_target(from_enemy: Node2D) -> Node2D:
+	if from_enemy == null or game == null:
+		return null
+	var nearest: Node2D = null
+	var nearest_distance := bounce_search_radius
+	for node in game.get_children():
+		if node == null or node == from_enemy:
+			continue
+		if not (node is Node2D):
+			continue
+		if node == owner_player:
+			continue
+		if not node.has_method("take_damage"):
+			continue
+		if bounced_targets.has(node):
+			continue
+		var candidate := node as Node2D
+		var distance := from_enemy.global_position.distance_to(candidate.global_position)
+		if distance <= nearest_distance:
+			nearest_distance = distance
+			nearest = candidate
+	return nearest
+
+func _spawn_bounce_bullet() -> void:
+	if game == null or pending_bounce_target == null:
+		queue_free()
+		return
+	var bounced_bullet: Area2D = BULLET_SCENE.instantiate()
+	bounced_bullet.global_position = global_position
+	if bounced_bullet.has_method("set_owner_player"):
+		bounced_bullet.set_owner_player(owner_player)
+	if bounced_bullet.has_method("set_status_modifiers"):
+		bounced_bullet.set_status_modifiers(experience_bonus_multiplier, freeze_chance, burn_chance, bounce_count - already_bounced, knockback_enabled)
+	if bounced_bullet.has_method("set_damage_multiplier"):
+		bounced_bullet.set_damage_multiplier(0.5)
+	if bounced_bullet.has_method("set_bounce_state"):
+		bounced_bullet.set_bounce_state(already_bounced, bounced_targets.duplicate())
+	game.add_child(bounced_bullet)
+	if bounced_bullet.has_method("set_target"):
+		bounced_bullet.set_target(pending_bounce_target)
+	pending_bounce_target = null
+	queue_free()
+
+func set_bounce_state(bounce_index: int, previous_targets: Array) -> void:
+	already_bounced = bounce_index
+	bounced_targets = previous_targets.duplicate()

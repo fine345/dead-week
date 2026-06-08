@@ -60,13 +60,15 @@ func _setup_timers() -> void:
 		enemy_two_timer.stop()
 	enemy_two_timer.start()
 
-func get_nearest_enemy(origin: Vector2, max_distance: float) -> Node2D:
+func get_nearest_enemy(origin: Vector2, max_distance: float, exclude_enemy: Node = null) -> Node2D:
 	var nearest: Node2D = null
-	var nearest_distance := max_distance
+	var nearest_distance: float = max_distance
 	for enemy in spawned_enemies:
 		if not is_instance_valid(enemy):
 			continue
-		var distance := origin.distance_to(enemy.global_position)
+		if exclude_enemy != null and enemy == exclude_enemy:
+			continue
+		var distance: float = origin.distance_to(enemy.global_position)
 		if distance <= nearest_distance:
 			nearest_distance = distance
 			nearest = enemy
@@ -184,8 +186,7 @@ func _on_reward_selected(reward_id: String) -> void:
 	if player == null:
 		return
 	_apply_reward(reward_id)
-	if reward_counts.has(reward_id):
-		reward_counts[reward_id] = int(reward_counts.get(reward_id, 0)) + 1
+	reward_counts[reward_id] = int(reward_counts.get(reward_id, 0)) + 1
 	if level_up_panel != null:
 		level_up_panel.visible = false
 		level_up_panel.process_mode = Node.PROCESS_MODE_INHERIT

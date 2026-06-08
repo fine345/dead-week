@@ -8,6 +8,7 @@ extends CharacterBody2D
 @export var bullet_damage_multiplier := 1.0
 @export var bullet_count := 1
 @export var experience_bonus_multiplier := 1.0
+var bullet_bounce_count := 0
 var shield_count := 0
 
 var health := 5
@@ -39,7 +40,8 @@ func set_game(game_ref: Node) -> void:
 	game = game_ref
 
 func collect_experience(value: int) -> void:
-	experience += value
+	var effective_value: int = int(round(float(value) * experience_bonus_multiplier))
+	experience += effective_value
 	var leveled_up := _try_level_up()
 	if leveled_up and game != null and game.has_method("_on_player_level_up"):
 		game._on_player_level_up()
@@ -61,20 +63,20 @@ func apply_reward_effect(reward_id: String) -> void:
 		"bullet_damage":
 			bullet_damage_multiplier += 0.5
 		"pickup_range":
-			pickup_range += 25.0
+			pickup_range *= 1.5
 		"attack_speed":
 			attack_interval = maxf(attack_interval * 0.5, 0.15)
 		"bullet_count":
 			bullet_count += 1
+		"bounce_count":
+			bullet_bounce_count += 1
 		"experience_bonus":
-			experience_bonus_multiplier += 0.25
+			experience_bonus_multiplier += 0.5
 		"shield":
 			shield_count += 1
 		"freeze_chance":
 			pass
 		"burn_chance":
-			pass
-		"bounce_count":
 			pass
 		"knockback":
 			pass
@@ -123,13 +125,13 @@ func _fire_bullet_sequence() -> void:
 
 func _fire_bullet_after_delay(delay_seconds: float) -> void:
 	if delay_seconds <= 0.0:
-		_spawn_bullet_now()
+		_spawn_bullet_now(0)
 		return
 	var timer := get_tree().create_timer(delay_seconds)
 	await timer.timeout
-	_spawn_bullet_now()
+	_spawn_bullet_now(1)
 
-func _spawn_bullet_now() -> void:
+func _spawn_bullet_now(bullet_index: int) -> void:
 	if game == null or not game.has_method("get_nearest_enemy"):
 		return
 	var candidate: Node2D = game.get_nearest_enemy(global_position, attack_range)
@@ -137,16 +139,15 @@ func _spawn_bullet_now() -> void:
 		return
 	var bullet := BULLET_SCENE.instantiate()
 	bullet.global_position = global_position
-	bullet.damage = int(10 * bullet_damage_multiplier)
+	bullet.damage = int(round(10 * bullet_damage_multiplier * (0.5 if bullet_index > 0 else 1.0)))
 	bullet.set_owner_player(self)
 	if bullet.has_method("set_status_modifiers"):
-		bullet.set_status_modifiers(experience_bonus_multiplier, 0.0, 0.0, 0, false)
+		bullet.set_status_modifiers(experience_bonus_multiplier, 0.0, 0.0, bullet_bounce_count, false)
 	if game != null:
 		game.add_child(bullet)
 	else:
 		add_child(bullet)
 	bullet.set_target(candidate)
-
 
 func _process(delta: float) -> void:
 	if is_dead:
