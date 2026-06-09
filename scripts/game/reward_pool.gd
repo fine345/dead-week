@@ -9,7 +9,7 @@ const REWARD_DEFS := [
 	},
 	{
 		"id": "pickup_range",
-		"title": "拾取范围 +50%",
+		"title": "拾取范围 +75%",
 		"type": "attribute",
 		"max_count": 2
 	},

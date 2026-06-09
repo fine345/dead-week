@@ -76,7 +76,8 @@ func get_nearest_enemy(origin: Vector2, max_distance: float, exclude_enemy: Node
 
 func spawn_player() -> void:
 	player = PLAYER_SCENE.instantiate()
-	player.position = Vector2(360, 720)
+	var viewport_size: Vector2 = get_viewport_rect().size
+	player.position = Vector2(viewport_size.x * 0.5, viewport_size.y * 0.5 - viewport_size.y / 16.0)
 	add_child(player)
 	player.set_game(self)
 
@@ -202,7 +203,16 @@ func _on_reward_selected(reward_id: String) -> void:
 
 func _update_hud() -> void:
 	if hud_info != null and player != null:
-		hud_info.text = "HP: %d / %d\nEnemies: %d\nExp Orbs: %d\nLV: %d  EXP: %d" % [player.health, player.max_health, spawned_enemies.size(), spawned_experiences.size(), player.level, player.experience]
+		var reward_text := "None"
+		if reward_pool != null and not reward_counts.is_empty():
+			var reward_list: Array[String] = []
+			for reward_id in reward_counts.keys():
+				var reward_title: String = str(reward_pool.get_reward_title(reward_id))
+				var reward_amount: int = int(reward_counts.get(reward_id, 0))
+				for i in range(reward_amount):
+					reward_list.append(reward_title)
+			reward_text = ", ".join(reward_list)
+		hud_info.text = "Time: %.1f\nReward: %s\nHP: %d / %d\nEnemies: %d\nExp Orbs: %d\nLV: %d  EXP: %d" % [elapsed_time, reward_text, player.health, player.max_health, spawned_enemies.size(), spawned_experiences.size(), player.level, player.experience]
 	if hud_game_over != null:
 		hud_game_over.visible = player != null and player.is_dead
 	if hud_restart_hint != null:

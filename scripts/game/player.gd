@@ -10,7 +10,10 @@ extends CharacterBody2D
 @export var experience_bonus_multiplier := 1.0
 var bullet_bounce_count := 0
 var bullet_knockback_enabled := false
+var bullet_freeze_chance := 0.0
+var bullet_burn_chance := 0.0
 var shield_count := 0
+var shield_effect_instance: Node2D = null
 
 var health := 5
 var game: Node = null
@@ -34,7 +37,7 @@ func _activate_camera() -> void:
 	var camera: Camera2D = $Camera2D
 	if camera != null:
 		camera.enabled = true
-		camera.position = Vector2.ZERO
+		camera.position = Vector2(0, 80)
 		camera.make_current()
 
 func set_game(game_ref: Node) -> void:
@@ -64,7 +67,7 @@ func apply_reward_effect(reward_id: String) -> void:
 		"bullet_damage":
 			bullet_damage_multiplier += 0.5
 		"pickup_range":
-			pickup_range *= 1.5
+			pickup_range *= 1.75
 		"attack_speed":
 			attack_interval = maxf(attack_interval * 0.5, 0.15)
 		"bullet_count":
@@ -77,10 +80,22 @@ func apply_reward_effect(reward_id: String) -> void:
 			bullet_knockback_enabled = true
 		"shield":
 			shield_count += 1
+			if shield_effect_instance == null or not is_instance_valid(shield_effect_instance):
+				var effect_scene: PackedScene = preload("res://scenes/effect/shield_effect.tscn")
+				shield_effect_instance = effect_scene.instantiate() as Node2D
+				add_child(shield_effect_instance)
+			if shield_effect_instance.has_method("set_target"):
+				shield_effect_instance.set_target(self)
+			if shield_effect_instance.has_method("set_effect_color"):
+				shield_effect_instance.set_effect_color(Color(0.2, 0.45, 1.0, 0.45))
+			if shield_effect_instance.has_method("set_effect_size"):
+				shield_effect_instance.set_effect_size(Vector2(36, 36))
+			if shield_effect_instance.has_method("set_effect_lifetime"):
+				shield_effect_instance.set_effect_lifetime(9999.0)
 		"freeze_chance":
-			pass
+			bullet_freeze_chance = minf(bullet_freeze_chance + 0.25, 1.0)
 		"burn_chance":
-			pass
+			bullet_burn_chance = minf(bullet_burn_chance + 0.25, 1.0)
 		"knockback":
 			pass
 
@@ -100,6 +115,9 @@ func take_damage(amount: int) -> void:
 		consume_shield()
 		invincible_time = 0.4
 		modulate = Color(0.7, 0.9, 1.0, 1.0)
+		if shield_count <= 0 and shield_effect_instance != null and is_instance_valid(shield_effect_instance):
+			shield_effect_instance.queue_free()
+			shield_effect_instance = null
 		if game != null and game.has_method("_update_hud"):
 			game._update_hud()
 		return
@@ -145,7 +163,11 @@ func _spawn_bullet_now(bullet_index: int) -> void:
 	bullet.damage = int(round(10 * bullet_damage_multiplier * (0.5 if bullet_index > 0 else 1.0)))
 	bullet.set_owner_player(self)
 	if bullet.has_method("set_status_modifiers"):
-		bullet.set_status_modifiers(experience_bonus_multiplier, 0.0, 0.0, bullet_bounce_count, bullet_knockback_enabled)
+		bullet.set_status_modifiers(experience_bonus_multiplier, bullet_freeze_chance, bullet_burn_chance, bullet_bounce_count, bullet_knockback_enabled)
+	if bullet.has_method("set_status_effect_multiplier"):
+		bullet.set_status_effect_multiplier(1.0)
+	if bullet.has_method("set_shot_effect_multiplier"):
+		bullet.set_shot_effect_multiplier(0.5 if bullet_index > 0 else 1.0)
 	if game != null:
 		game.add_child(bullet)
 	else:

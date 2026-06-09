@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://befh1nvgh3qd6"]
+
+[ext_resource type="Texture2D" uid="uid://o5o6lrplba46" path="res://assets/generated/effect_box_white.png" id="2_3tpp1"]
+[ext_resource type="Script" uid="uid://bnsyqidy1qsr3" path="res://scripts/game/status_effect.gd" id="2_gcdcw"]
+
+[node name="FreezeEffect" type="Node2D" unique_id=1224484554]
+script = ExtResource("2_gcdcw")
+
+[node name="Visual" type="Sprite2D" parent="." unique_id=453834280]
+modulate = Color(0, 0, 0, 0.55)
+z_index = 100
+scale = Vector2(0.9375, 0.9375)
+texture = ExtResource("2_3tpp1")
+script = ExtResource("2_gcdcw")

@@ -3,6 +3,8 @@
 [ext_resource type="Script" uid="uid://cgag7c0dle264" path="res://scripts/game/main.gd" id="1_llaio"]
 [ext_resource type="PackedScene" uid="uid://ctcvd8wy0rnhn" path="res://scenes/ui/level_up_panel.tscn" id="2_oekm8"]
 [ext_resource type="Script" uid="uid://wu0bqi1u3elk" path="res://scripts/game/level_up_panel.gd" id="3_yd8kv"]
+[ext_resource type="PackedScene" uid="uid://bn8jggr1tiupa" path="res://scenes/ui/virtual_joystick.tscn" id="4_iba00"]
+[ext_resource type="Script" uid="uid://dubx6ob6i50j0" path="res://scripts/game/grid_background.gd" id="4_uaf1y"]
 
 [node name="Main" type="Node2D" unique_id=1706105945]
 script = ExtResource("1_llaio")
@@ -41,3 +43,13 @@ text = "GAME OVER"
 [node name="LevelUpPanel" parent="HUD" unique_id=517495123 instance=ExtResource("2_oekm8")]
 visible = false
 script = ExtResource("3_yd8kv")
+
+[node name="VirtualJoystick" parent="HUD" unique_id=280974345 instance=ExtResource("4_iba00")]
+z_index = 100
+offset_top = 820.0
+offset_bottom = 980.0
+
+[node name="GridBackground" type="Node2D" parent="." unique_id=616289855]
+z_index = -100
+position = Vector2(-720, -1440)
+script = ExtResource("4_uaf1y")

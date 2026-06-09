@@ -16,9 +16,11 @@ var freeze_chance := 0.0
 var burn_chance := 0.0
 var bounce_count := 0
 var damage_multiplier := 1.0
+var status_effect_multiplier := 1.0
+var shot_effect_multiplier := 1.0
 var knockback_enabled := false
 var knockback_force := 120.0
-var spawned_at := 0.0
+var life_time := 0.0
 var spawn_delay := 0.0
 var use_target_homing := true
 var bounced_targets: Array[Node2D] = []
@@ -30,7 +32,7 @@ const BULLET_SCENE := preload("res://scenes/game/bullet.tscn")
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
-	spawned_at = Time.get_ticks_msec() / 1000.0
+	life_time = 0.0
 	if has_meta("spawn_delay"):
 		spawn_delay = float(get_meta("spawn_delay"))
 	if has_meta("initial_direction"):
@@ -73,16 +75,22 @@ func set_status_modifiers(exp_bonus: float, freeze_prob: float = 0.0, burn_prob:
 	knockback_enabled = knockback
 	has_knockback_effect = knockback
 
+func set_status_effect_multiplier(multiplier: float) -> void:
+	status_effect_multiplier = maxf(multiplier, 0.0)
+
+func set_shot_effect_multiplier(multiplier: float) -> void:
+	shot_effect_multiplier = maxf(multiplier, 0.0)
+
 func set_damage_multiplier(multiplier: float) -> void:
 	damage_multiplier = multiplier
 	damage = int(round(damage * damage_multiplier))
 
 func _physics_process(delta: float) -> void:
-	var age: float = Time.get_ticks_msec() / 1000.0 - spawned_at
-	if age >= lifetime:
+	life_time += delta
+	if life_time >= lifetime:
 		queue_free()
 		return
-	if spawn_delay > 0.0 and age < spawn_delay:
+	if spawn_delay > 0.0 and life_time < spawn_delay:
 		return
 	if use_target_homing and target != null and is_instance_valid(target):
 		var desired_direction: Vector2 = global_position.direction_to(target.global_position)
@@ -111,12 +119,13 @@ func _on_body_entered(body: Node) -> void:
 	if body is Node2D and bounced_targets.has(body):
 		return
 	var hit_force: float = knockback_force * (0.5 if already_bounced > 0 else 1.0)
+	var effect_scale := status_effect_multiplier * shot_effect_multiplier
 	if body.has_method("apply_knockback") and knockback_enabled:
-		body.apply_knockback(global_position, hit_force)
+		body.apply_knockback(global_position, hit_force * effect_scale)
 	if body.has_method("apply_freeze") and freeze_chance > 0.0 and randf() < freeze_chance:
-		body.apply_freeze(2.0)
+		body.apply_freeze(1.5 * effect_scale)
 	if body.has_method("apply_burn") and burn_chance > 0.0 and randf() < burn_chance:
-		body.apply_burn(5.0, 1)
+		body.apply_burn(1.0 * effect_scale, max(1, int(round(damage * 0.2))))
 	body.take_damage(damage)
 	if body is Node2D:
 		bounced_targets.append(body)
@@ -165,6 +174,10 @@ func _spawn_bounce_bullet() -> void:
 	if bounced_bullet.has_method("set_status_modifiers"):
 		var remaining_bounces: int = maxi(bounce_count - already_bounced, 0)
 		bounced_bullet.set_status_modifiers(experience_bonus_multiplier, freeze_chance, burn_chance, remaining_bounces, knockback_enabled)
+	if bounced_bullet.has_method("set_status_effect_multiplier"):
+		bounced_bullet.set_status_effect_multiplier(status_effect_multiplier)
+	if bounced_bullet.has_method("set_shot_effect_multiplier"):
+		bounced_bullet.set_shot_effect_multiplier(shot_effect_multiplier * 0.5)
 	if bounced_bullet.has_method("set_damage_multiplier"):
 		bounced_bullet.set_damage_multiplier(0.5)
 	if bounced_bullet.has_method("set_bounce_state"):
