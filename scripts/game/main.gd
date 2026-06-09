@@ -30,7 +30,7 @@ var pending_reward_options: Array[String] = []
 @onready var hud_game_over: Label = $RewardLayer/GameOverPanel/GameOver
 @onready var hud_retry_button: Button = $RewardLayer/GameOverPanel/RetryButton
 @onready var hud_virtual_joystick: Control = $HUD/VirtualJoystick
-@onready var level_up_panel: Control = $RewardLayer/RewardPanel/LevelUpPanel
+@onready var level_up_panel: Control = $RewardLayer/GameOverPanel/LevelUpPanel
 
 func _ready() -> void:
 	reward_pool = REWARD_POOL_SCRIPT.new()
@@ -237,6 +237,8 @@ func _update_game_state_ui() -> void:
 	if hud_virtual_joystick != null:
 		hud_virtual_joystick.visible = show_joystick
 		hud_virtual_joystick.mouse_filter = Control.MOUSE_FILTER_IGNORE if not show_joystick else Control.MOUSE_FILTER_STOP
+		if hud_virtual_joystick.has_method("set_enabled"):
+			hud_virtual_joystick.call("set_enabled", show_joystick)
 	if level_up_panel != null:
 		level_up_panel.mouse_filter = Control.MOUSE_FILTER_STOP if in_reward_select else Control.MOUSE_FILTER_IGNORE
 
@@ -283,7 +285,7 @@ func collect_experience(value: int) -> void:
 	_update_game_state_ui()
 
 func _prepare_reward_offers() -> void:
-	if reward_pool == null or level_up_panel == null:
+	if reward_pool == null:
 		return
 	var choices: Array[Dictionary] = reward_pool.get_offer_choices(reward_counts, 3)
 	pending_reward_options.clear()
@@ -292,7 +294,8 @@ func _prepare_reward_offers() -> void:
 		var reward_id := str(choice["id"])
 		pending_reward_options.append(reward_id)
 		display_titles.append(reward_pool.get_reward_title(reward_id))
-	level_up_panel.call("set_rewards", pending_reward_options, display_titles)
+	if level_up_panel != null:
+		level_up_panel.call("set_rewards", pending_reward_options, display_titles)
 
 func _apply_reward(reward_id: String) -> void:
 	if player == null:

@@ -8,6 +8,13 @@
 
 [node name="Main" type="Node2D" unique_id=1706105945]
 script = ExtResource("1_llaio")
+enemy_one_spawn_interval = null
+enemy_two_spawn_interval = null
+enemy_spawn_distance = null
+enemy_spawn_min_distance = null
+enemy_density_slowdown = null
+enemy_time_relief_start = null
+enemy_time_relief_full = null
 
 [node name="EnemyTimer" type="Timer" parent="." unique_id=208697807]
 wait_time = 2.0
@@ -40,26 +47,6 @@ script = ExtResource("4_uaf1y")
 [node name="RewardLayer" type="CanvasLayer" parent="." unique_id=2141944692]
 process_mode = 3
 layer = 10
-
-[node name="RewardPanel" type="Control" parent="RewardLayer" unique_id=1545774549]
-process_mode = 3
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="LevelUpPanel" parent="RewardLayer/RewardPanel" unique_id=517495123 instance=ExtResource("2_oekm8")]
-visible = false
-z_index = 200
-layout_mode = 0
-anchors_preset = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
-grow_horizontal = 1
-grow_vertical = 1
-script = ExtResource("3_yd8kv")
 
 [node name="GameOverPanel" type="Control" parent="RewardLayer" unique_id=1231284736]
 layout_mode = 3
@@ -96,5 +83,12 @@ offset_bottom = 24.0
 grow_horizontal = 2
 grow_vertical = 2
 text = "再试一次"
+
+[node name="LevelUpPanel" parent="RewardLayer/GameOverPanel" unique_id=1610602697 instance=ExtResource("2_oekm8")]
+visible = false
+top_level = true
+z_index = 200
+layout_mode = 1
+script = ExtResource("3_yd8kv")
 
 [connection signal="pressed" from="RewardLayer/GameOverPanel/RetryButton" to="." method="restart_game"]

@@ -17,11 +17,9 @@ color = Color(0, 0, 0, 0.65)
 
 [node name="Panel" type="PanelContainer" parent="." unique_id=862173448]
 process_mode = 3
-layout_mode = 0
-offset_left = 210.0
-offset_top = 520.0
-offset_right = 510.0
-offset_bottom = 920.0
+layout_mode = 1
+offset_right = 300.0
+offset_bottom = 400.0
 
 [node name="VBox" type="VBoxContainer" parent="Panel" unique_id=1448595298]
 layout_mode = 2

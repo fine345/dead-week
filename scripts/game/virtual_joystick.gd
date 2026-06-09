@@ -12,6 +12,7 @@ extends Control
 @onready var knob: Control = $Base/Knob
 
 var active := false
+var enabled := true
 var pointer_id := -1
 var input_vector := Vector2.ZERO
 var base_center := Vector2.ZERO
@@ -21,14 +22,25 @@ func _ready() -> void:
 	base.visible = false
 	_apply_input(Vector2.ZERO)
 
+func set_enabled(value: bool) -> void:
+	enabled = value
+	if not enabled:
+		if active:
+			_reset_joystick()
+		base.visible = false
+
 func _input(event: InputEvent) -> void:
+	if not enabled:
+		if active:
+			_reset_joystick()
+		return
 	if get_tree().paused:
 		if active:
 			_reset_joystick()
 		return
 
 	if event is InputEventScreenTouch:
-		if event.pressed and not active:
+		if event.pressed and not active and _can_use_touch_at(event.position):
 			active = true
 			pointer_id = event.index
 			_show_joystick_at(event.position)
@@ -53,6 +65,10 @@ func _input(event: InputEvent) -> void:
 	elif event is InputEventMouseMotion and active and pointer_id == 0 and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		_update_from_position(event.position)
 		get_viewport().set_input_as_handled()
+
+func _can_use_touch_at(screen_position: Vector2) -> bool:
+	var viewport_size := get_viewport_rect().size
+	return screen_position.y >= viewport_size.y * (1.0 - mouse_active_area_ratio)
 
 func _can_use_mouse_at(screen_position: Vector2) -> bool:
 	var viewport_size := get_viewport_rect().size
