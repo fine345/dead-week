@@ -4,7 +4,7 @@
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1t2yy"]
 
-[node name="Enemy" type="CharacterBody2D" unique_id=2032814313]
+[node name="Enemy" type="CharacterBody2D" unique_id=2032814313 groups=["enemy"]]
 script = ExtResource("1_1t2yy")
 
 [node name="Visual" type="ColorRect" parent="." unique_id=935903911]

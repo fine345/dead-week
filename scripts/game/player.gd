@@ -113,22 +113,52 @@ func take_damage(amount: int) -> void:
 		return
 	if has_shield():
 		consume_shield()
-		invincible_time = 0.4
+		invincible_time = 1.0
 		modulate = Color(0.7, 0.9, 1.0, 1.0)
-		if shield_count <= 0 and shield_effect_instance != null and is_instance_valid(shield_effect_instance):
-			shield_effect_instance.queue_free()
-			shield_effect_instance = null
+		_apply_damage_knockback()
+		if shield_count <= 0:
+			_apply_shield_break_knockback()
+			if shield_effect_instance != null and is_instance_valid(shield_effect_instance):
+				shield_effect_instance.queue_free()
+				shield_effect_instance = null
 		if game != null and game.has_method("_update_hud"):
 			game._update_hud()
 		return
 	health = max(health - amount, 0)
-	invincible_time = 0.4
+	invincible_time = 1.0
 	modulate = Color(1.0, 0.6, 0.6, 1.0)
+	_apply_damage_knockback()
 	if health <= 0:
 		is_dead = true
 		modulate = Color(0.5, 0.5, 0.5, 1.0)
 	if game != null and game.has_method("_update_hud"):
 		game._update_hud()
+
+func _apply_damage_knockback() -> void:
+	_apply_knockback_area(40.0, 3.0)
+
+func _apply_shield_break_knockback() -> void:
+	_apply_knockback_area(40.0, 3.0)
+
+func _apply_knockback_area(radius: float, force: float) -> void:
+	var space_state = get_world_2d().direct_space_state
+	if space_state == null:
+		return
+	var shape = CircleShape2D.new()
+	shape.radius = radius
+	var params = PhysicsShapeQueryParameters2D.new()
+	params.shape = shape
+	params.transform = Transform2D(0.0, global_position)
+	params.collide_with_bodies = true
+	params.collide_with_areas = false
+	params.exclude = [self]
+	var hits = space_state.intersect_shape(params, 32)
+	for hit in hits:
+		var collider = hit.get("collider")
+		if collider == null or not is_instance_valid(collider):
+			continue
+		if collider.has_method("apply_knockback"):
+			collider.apply_knockback(global_position, force)
 
 func _try_auto_attack() -> void:
 	if game == null or not game.has_method("get_nearest_enemy"):

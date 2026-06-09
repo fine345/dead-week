@@ -27,9 +27,10 @@ var pending_reward_options: Array[String] = []
 @onready var enemy_one_timer: Timer = $EnemyTimer
 @onready var enemy_two_timer: Timer = Timer.new()
 @onready var hud_info: Label = $HUD/Info
-@onready var hud_restart_hint: Label = $HUD/RestartHint
-@onready var hud_game_over: Label = $HUD/GameOver
-@onready var level_up_panel: Control = $HUD/LevelUpPanel
+@onready var hud_game_over: Label = $RewardLayer/GameOverPanel/GameOver
+@onready var hud_retry_button: Button = $RewardLayer/GameOverPanel/RetryButton
+@onready var hud_virtual_joystick: Control = $HUD/VirtualJoystick
+@onready var level_up_panel: Control = $RewardLayer/RewardPanel/LevelUpPanel
 
 func _ready() -> void:
 	reward_pool = REWARD_POOL_SCRIPT.new()
@@ -39,9 +40,14 @@ func _ready() -> void:
 		level_up_panel.reward_selected.connect(_on_reward_selected)
 	if level_up_panel != null:
 		level_up_panel.visible = false
+	if hud_game_over != null:
+		hud_game_over.visible = false
+	if hud_retry_button != null:
+		hud_retry_button.visible = false
 	elapsed_time = 0.0
 	enemy_two_unlocked = false
 	_update_hud()
+	_update_game_state_ui()
 
 func _setup_timers() -> void:
 	enemy_one_timer.wait_time = enemy_one_spawn_interval
@@ -147,6 +153,7 @@ func on_enemy_died(enemy: Node) -> void:
 			drop_value = int(enemy.get("experience_drop"))
 		_spawn_experience(enemy.global_position, drop_value)
 	_update_hud()
+	_update_game_state_ui()
 	_update_spawn_timers()
 
 func _spawn_experience(position: Vector2, value: int) -> void:
@@ -167,6 +174,7 @@ func _on_experience_tree_exited(experience: Node) -> void:
 func _on_enemy_tree_exited(enemy: Node) -> void:
 	spawned_enemies.erase(enemy)
 	_update_hud()
+	_update_game_state_ui()
 	_update_spawn_timers()
 
 func _process(delta: float) -> void:
@@ -174,11 +182,16 @@ func _process(delta: float) -> void:
 	enemy_two_unlocked = elapsed_time >= enemy_time_relief_start
 	_update_spawn_timers()
 	if Input.is_key_pressed(KEY_R) and player != null and player.is_dead:
-		_restart_game()
+		restart_game()
 	if Input.is_key_pressed(KEY_Q):
 		_prepare_reward_offers()
 		_pause_for_level_up()
 	_update_hud()
+	_update_game_state_ui()
+
+func restart_game() -> void:
+	_restart_game()
+
 
 func _on_player_level_up() -> void:
 	if player == null:
@@ -194,31 +207,46 @@ func _on_reward_selected(reward_id: String) -> void:
 	if level_up_panel != null:
 		level_up_panel.visible = false
 		level_up_panel.process_mode = Node.PROCESS_MODE_INHERIT
+		level_up_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+		var reward_panel := level_up_panel.get_parent() as Control
+		if reward_panel != null:
+			reward_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	if enemy_one_timer != null:
 		enemy_one_timer.paused = false
 	if enemy_two_timer != null:
 		enemy_two_timer.paused = false
 	get_tree().paused = false
 	_update_hud()
+	_update_game_state_ui()
 
 func _update_hud() -> void:
 	if hud_info != null and player != null:
-		var reward_text := "None"
-		if reward_pool != null and not reward_counts.is_empty():
-			var reward_list: Array[String] = []
-			for reward_id in reward_counts.keys():
-				var reward_title: String = str(reward_pool.get_reward_title(reward_id))
-				var reward_amount: int = int(reward_counts.get(reward_id, 0))
-				for i in range(reward_amount):
-					reward_list.append(reward_title)
-			reward_text = ", ".join(reward_list)
-		hud_info.text = "Time: %.1f\nReward: %s\nHP: %d / %d\nEnemies: %d\nExp Orbs: %d\nLV: %d  EXP: %d" % [elapsed_time, reward_text, player.health, player.max_health, spawned_enemies.size(), spawned_experiences.size(), player.level, player.experience]
+		hud_info.text = "Time: %.1f\nHP: %d / %d\nEnemies: %d\nExp Orbs: %d\nLV: %d  EXP: %d" % [elapsed_time, player.health, player.max_health, spawned_enemies.size(), spawned_experiences.size(), player.level, player.experience]
+	_update_game_state_ui()
+
+func _update_game_state_ui() -> void:
+	var in_reward_select := get_tree().paused and level_up_panel != null and level_up_panel.visible
+	var game_over_visible: bool = player != null and player.is_dead
+	var show_joystick := not game_over_visible and not in_reward_select
 	if hud_game_over != null:
-		hud_game_over.visible = player != null and player.is_dead
-	if hud_restart_hint != null:
-		hud_restart_hint.visible = player != null and player.is_dead
+		hud_game_over.visible = game_over_visible
+	if hud_retry_button != null:
+		hud_retry_button.visible = game_over_visible
+		hud_retry_button.process_mode = Node.PROCESS_MODE_ALWAYS
+		hud_retry_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	if hud_virtual_joystick != null:
+		hud_virtual_joystick.visible = show_joystick
+		hud_virtual_joystick.mouse_filter = Control.MOUSE_FILTER_IGNORE if not show_joystick else Control.MOUSE_FILTER_STOP
+	if level_up_panel != null:
+		level_up_panel.mouse_filter = Control.MOUSE_FILTER_STOP if in_reward_select else Control.MOUSE_FILTER_IGNORE
 
 func _restart_game() -> void:
+	if get_tree().paused:
+		get_tree().paused = false
+		await get_tree().process_frame
+	if level_up_panel != null:
+		level_up_panel.visible = false
+		level_up_panel.process_mode = Node.PROCESS_MODE_INHERIT
 	experience_cleanup_enabled = false
 	for enemy in spawned_enemies:
 		if is_instance_valid(enemy):
@@ -228,6 +256,10 @@ func _restart_game() -> void:
 			experience.queue_free()
 	spawned_enemies.clear()
 	spawned_experiences.clear()
+	for child in get_children():
+		if child is Node2D and child != player and child != enemy_one_timer and child != level_up_panel and child != hud_virtual_joystick:
+			if child.name.begins_with("Bullet"):
+				child.queue_free()
 	if is_instance_valid(player):
 		player.queue_free()
 	player = null
@@ -236,15 +268,19 @@ func _restart_game() -> void:
 	elapsed_time = 0.0
 	enemy_two_unlocked = false
 	if enemy_one_timer != null:
+		enemy_one_timer.stop()
 		enemy_one_timer.start()
 	if enemy_two_timer != null:
+		enemy_two_timer.stop()
 		enemy_two_timer.start()
 	_update_hud()
+	_update_game_state_ui()
 
 func collect_experience(value: int) -> void:
 	if player != null and player.has_method("collect_experience"):
 		player.collect_experience(value)
 	_update_hud()
+	_update_game_state_ui()
 
 func _prepare_reward_offers() -> void:
 	if reward_pool == null or level_up_panel == null:
@@ -269,6 +305,7 @@ func _pause_for_level_up() -> void:
 	if level_up_panel != null:
 		level_up_panel.visible = true
 		level_up_panel.process_mode = Node.PROCESS_MODE_ALWAYS
+		level_up_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	if enemy_one_timer != null:
 		enemy_one_timer.paused = true
 	if enemy_two_timer != null:

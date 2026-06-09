@@ -85,7 +85,7 @@ func apply_knockback(from_position: Vector2, force: float) -> void:
 	if direction == Vector2.ZERO:
 		direction = Vector2.RIGHT
 	knockback_direction = direction
-	knockback_distance_left = 5.0
+	knockback_distance_left = 5.0 * maxf(force, 0.1)
 	knockback_timer = 0.05
 	knockback_return_timer = 0.1
 	knockback_return_speed = stored_move_speed
