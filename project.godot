@@ -24,6 +24,7 @@ MCPRuntime="*uid://c8dfcidpqvwq8"
 window/size/viewport_width=720
 window/size/viewport_height=1440
 window/stretch/mode="viewport"
+window/handheld/orientation=1.0
 
 [editor_plugins]
 

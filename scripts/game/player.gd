@@ -1,9 +1,9 @@
 extends CharacterBody2D
 
-@export var move_speed := 150.0
+@export var move_speed := 200.0
 @export var max_health := 5
 @export var attack_interval := 0.75
-@export var attack_range := 420.0
+@export var attack_range := 252.0
 @export var pickup_range := 100.0
 @export var bullet_damage_multiplier := 1.0
 @export var bullet_count := 1
@@ -12,6 +12,7 @@ var bullet_bounce_count := 0
 var bullet_knockback_enabled := false
 var bullet_freeze_chance := 0.0
 var bullet_burn_chance := 0.0
+var bullet_speed_multiplier := 1.0
 var shield_count := 0
 var shield_effect_instance: Node2D = null
 
@@ -78,6 +79,10 @@ func apply_reward_effect(reward_id: String) -> void:
 			experience_bonus_multiplier += 0.5
 		"knockback":
 			bullet_knockback_enabled = true
+		"attack_range":
+			attack_range *= 1.5
+		"bullet_speed":
+			bullet_speed_multiplier += 0.5
 		"shield":
 			shield_count += 1
 			if shield_effect_instance == null or not is_instance_valid(shield_effect_instance):
@@ -198,6 +203,8 @@ func _spawn_bullet_now(bullet_index: int) -> void:
 		bullet.set_status_effect_multiplier(1.0)
 	if bullet.has_method("set_shot_effect_multiplier"):
 		bullet.set_shot_effect_multiplier(0.5 if bullet_index > 0 else 1.0)
+	if bullet.has_method("set_speed_multiplier"):
+		bullet.set_speed_multiplier(bullet_speed_multiplier)
 	if game != null:
 		game.add_child(bullet)
 	else:

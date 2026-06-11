@@ -23,14 +23,16 @@ var enemy_two_unlocked := false
 var reward_pool: Node = null
 var reward_counts: Dictionary = {}
 var pending_reward_options: Array[String] = []
+var game_over_paused := false
 
 @onready var enemy_one_timer: Timer = $EnemyTimer
 @onready var enemy_two_timer: Timer = Timer.new()
 @onready var hud_info: Label = $HUD/Info
-@onready var hud_game_over: Label = $RewardLayer/GameOverPanel/GameOver
-@onready var hud_retry_button: Button = $RewardLayer/GameOverPanel/RetryButton
+@onready var hud_game_over: Label = $Layer/Panel/GameOver
+@onready var hud_retry_button: Button = $Layer/Panel/RetryButton
+@onready var level_up_panel: Control = $Layer/Panel/LevelUpPanel
+@onready var pause_button: Button = $Layer/Panel/PauseButton
 @onready var hud_virtual_joystick: Control = $HUD/VirtualJoystick
-@onready var level_up_panel: Control = $RewardLayer/GameOverPanel/LevelUpPanel
 
 func _ready() -> void:
 	reward_pool = REWARD_POOL_SCRIPT.new()
@@ -227,6 +229,15 @@ func _update_hud() -> void:
 func _update_game_state_ui() -> void:
 	var in_reward_select := get_tree().paused and level_up_panel != null and level_up_panel.visible
 	var game_over_visible: bool = player != null and player.is_dead
+	if game_over_visible and not game_over_paused:
+		game_over_paused = true
+		get_tree().paused = true
+		if enemy_one_timer != null:
+			enemy_one_timer.paused = true
+		if enemy_two_timer != null:
+			enemy_two_timer.paused = true
+	elif not game_over_visible and game_over_paused:
+		game_over_paused = false
 	var show_joystick := not game_over_visible and not in_reward_select
 	if hud_game_over != null:
 		hud_game_over.visible = game_over_visible
@@ -246,6 +257,7 @@ func _restart_game() -> void:
 	if get_tree().paused:
 		get_tree().paused = false
 		await get_tree().process_frame
+	game_over_paused = false
 	if level_up_panel != null:
 		level_up_panel.visible = false
 		level_up_panel.process_mode = Node.PROCESS_MODE_INHERIT
@@ -287,7 +299,7 @@ func collect_experience(value: int) -> void:
 func _prepare_reward_offers() -> void:
 	if reward_pool == null:
 		return
-	var choices: Array[Dictionary] = reward_pool.get_offer_choices(reward_counts, 3)
+	var choices: Array[Dictionary] = reward_pool.get_offer_choices(reward_counts, 3, player.shield_count if player != null else 0)
 	pending_reward_options.clear()
 	var display_titles: Array[String] = []
 	for choice in choices:
@@ -313,3 +325,21 @@ func _pause_for_level_up() -> void:
 		enemy_one_timer.paused = true
 	if enemy_two_timer != null:
 		enemy_two_timer.paused = true
+
+func _on_pause_button_pressed() -> void:
+	if game_over_paused:
+		return
+	if get_tree().paused:
+		get_tree().paused = false
+		if enemy_one_timer != null:
+			enemy_one_timer.paused = false
+		if enemy_two_timer != null:
+			enemy_two_timer.paused = false
+		pause_button.text = "暂停"
+	else:
+		get_tree().paused = true
+		if enemy_one_timer != null:
+			enemy_one_timer.paused = true
+		if enemy_two_timer != null:
+			enemy_two_timer.paused = true
+		pause_button.text = "继续"

@@ -8,13 +8,6 @@
 
 [node name="Main" type="Node2D" unique_id=1706105945]
 script = ExtResource("1_llaio")
-enemy_one_spawn_interval = null
-enemy_two_spawn_interval = null
-enemy_spawn_distance = null
-enemy_spawn_min_distance = null
-enemy_density_slowdown = null
-enemy_time_relief_start = null
-enemy_time_relief_full = null
 
 [node name="EnemyTimer" type="Timer" parent="." unique_id=208697807]
 wait_time = 2.0
@@ -44,11 +37,11 @@ z_index = -100
 position = Vector2(-720, -1440)
 script = ExtResource("4_uaf1y")
 
-[node name="RewardLayer" type="CanvasLayer" parent="." unique_id=2141944692]
+[node name="Layer" type="CanvasLayer" parent="." unique_id=2141944692]
 process_mode = 3
 layer = 10
 
-[node name="GameOverPanel" type="Control" parent="RewardLayer" unique_id=1231284736]
+[node name="Panel" type="Control" parent="Layer" unique_id=1231284736]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -56,7 +49,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="GameOver" type="Label" parent="RewardLayer/GameOverPanel" unique_id=1217924387]
+[node name="GameOver" type="Label" parent="Layer/Panel" unique_id=1217924387]
 visible = false
 z_index = 200
 layout_mode = 0
@@ -66,7 +59,7 @@ offset_right = 260.0
 offset_bottom = 700.0
 text = "GAME OVER"
 
-[node name="RetryButton" type="Button" parent="RewardLayer/GameOverPanel" unique_id=1340429030]
+[node name="RetryButton" type="Button" parent="Layer/Panel" unique_id=1340429030 groups=["ui_capture"]]
 process_mode = 3
 visible = false
 z_index = 210
@@ -84,11 +77,21 @@ grow_horizontal = 2
 grow_vertical = 2
 text = "再试一次"
 
-[node name="LevelUpPanel" parent="RewardLayer/GameOverPanel" unique_id=1610602697 instance=ExtResource("2_oekm8")]
+[node name="LevelUpPanel" parent="Layer/Panel" unique_id=1610602697 instance=ExtResource("2_oekm8")]
 visible = false
 top_level = true
 z_index = 200
 layout_mode = 1
 script = ExtResource("3_yd8kv")
 
-[connection signal="pressed" from="RewardLayer/GameOverPanel/RetryButton" to="." method="restart_game"]
+[node name="PauseButton" type="Button" parent="Layer/Panel" unique_id=786493594 groups=["ui_capture"]]
+process_mode = 3
+layout_mode = 0
+offset_left = 600.0
+offset_top = 15.0
+offset_right = 710.0
+offset_bottom = 55.0
+text = "暂停"
+
+[connection signal="pressed" from="Layer/Panel/RetryButton" to="." method="restart_game"]
+[connection signal="pressed" from="Layer/Panel/PauseButton" to="." method="_on_pause_button_pressed"]

@@ -40,7 +40,7 @@ func _input(event: InputEvent) -> void:
 		return
 
 	if event is InputEventScreenTouch:
-		if event.pressed and not active and _can_use_touch_at(event.position):
+		if event.pressed and not active and _can_use_touch_at(event.position) and not _is_over_ui(event.position):
 			active = true
 			pointer_id = event.index
 			_show_joystick_at(event.position)
@@ -53,7 +53,7 @@ func _input(event: InputEvent) -> void:
 		_update_from_position(event.position)
 		get_viewport().set_input_as_handled()
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		if event.pressed and not active and _can_use_mouse_at(event.position):
+		if event.pressed and not active and _can_use_mouse_at(event.position) and not _is_over_ui(event.position):
 			active = true
 			pointer_id = 0
 			_show_joystick_at(event.position)
@@ -67,12 +67,16 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func _can_use_touch_at(screen_position: Vector2) -> bool:
-	var viewport_size := get_viewport_rect().size
-	return screen_position.y >= viewport_size.y * (1.0 - mouse_active_area_ratio)
+	return true
 
 func _can_use_mouse_at(screen_position: Vector2) -> bool:
-	var viewport_size := get_viewport_rect().size
-	return screen_position.y >= viewport_size.y * (1.0 - mouse_active_area_ratio)
+	return true
+
+func _is_over_ui(screen_position: Vector2) -> bool:
+	for control in get_tree().get_nodes_in_group("ui_capture"):
+		if control is Control and control.visible and control.get_global_rect().has_point(screen_position):
+			return true
+	return false
 
 func _show_joystick_at(screen_position: Vector2) -> void:
 	base.visible = true

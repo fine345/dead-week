@@ -1,6 +1,6 @@
 extends CharacterBody2D
 
-@export var move_speed := 100.0
+@export var move_speed := 150.0
 @export var touch_damage := 1
 @export var touch_range := 18.0
 @export var max_health := 30
@@ -26,7 +26,7 @@ var knockback_return_timer := 0.0
 var knockback_direction := Vector2.ZERO
 var knockback_distance_left := 0.0
 var knockback_return_speed := 0.0
-var stored_move_speed := 100.0
+var stored_move_speed := 150.0
 
 func _ready() -> void:
 	_apply_enemy_type()
@@ -96,11 +96,11 @@ func _apply_enemy_type() -> void:
 	match enemy_type:
 		2:
 			max_health = 50
-			move_speed = 100.0
+			move_speed = 150.0
 			experience_drop = 10
 		_:
 			max_health = 30
-			move_speed = 100.0
+			move_speed = 150.0
 			experience_drop = 5
 
 func set_game(game_ref: Node) -> void:

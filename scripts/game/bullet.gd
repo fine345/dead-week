@@ -81,6 +81,9 @@ func set_status_effect_multiplier(multiplier: float) -> void:
 func set_shot_effect_multiplier(multiplier: float) -> void:
 	shot_effect_multiplier = maxf(multiplier, 0.0)
 
+func set_speed_multiplier(multiplier: float) -> void:
+	move_speed *= multiplier
+
 func set_damage_multiplier(multiplier: float) -> void:
 	damage_multiplier = multiplier
 	damage = int(round(damage * damage_multiplier))

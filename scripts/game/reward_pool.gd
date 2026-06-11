@@ -34,9 +34,7 @@ const REWARD_DEFS := [
 	{
 		"id": "shield",
 		"title": "护盾（抵挡1次攻击）",
-		"type": "ability",
-		"max_count": 1,
-		"repeatable": true
+		"type": "ability"
 	},
 	{
 		"id": "freeze_chance",
@@ -61,17 +59,33 @@ const REWARD_DEFS := [
 		"title": "子弹获得击退效果",
 		"type": "ability",
 		"max_count": 1
+	},
+	{
+		"id": "attack_range",
+		"title": "攻击范围 +50%",
+		"type": "attribute",
+		"max_count": 2
+	},
+	{
+		"id": "bullet_speed",
+		"title": "子弹速度 +50%",
+		"type": "attribute",
+		"max_count": 2
 	}
 ]
 
-func get_offer_choices(existing_counts: Dictionary, offer_count: int = 3) -> Array[Dictionary]:
+func get_offer_choices(existing_counts: Dictionary, offer_count: int = 3, player_shield_count: int = 0) -> Array[Dictionary]:
 	var available: Array[Dictionary] = []
 	for reward in REWARD_DEFS:
 		var reward_id: String = str(reward["id"])
 		var current_count: int = int(existing_counts.get(reward_id, 0))
-		var max_count: int = int(reward["max_count"])
+		var max_count: int = int(reward["max_count"]) if reward.has("max_count") else 999999
 		var repeatable: bool = reward.has("repeatable") and bool(reward["repeatable"])
-		if repeatable:
+		if reward_id == "shield":
+			if player_shield_count > 0:
+				continue
+			available.append(reward)
+		elif repeatable:
 			if current_count < max_count:
 				available.append(reward)
 		elif current_count < max_count:
@@ -96,4 +110,3 @@ func get_reward_type(reward_id: String) -> String:
 		if reward.id == reward_id:
 			return str(reward.type)
 	return "attribute"
-

@@ -2,10 +2,9 @@ extends Area2D
 
 @export var pickup_value := 5
 @export var attract_range := 140.0
-@export var attract_speed := 260.0
+@export var attract_speed := 390.0
 
 var attracted_target: Node2D = null
-var pickup_range := 140.0
 
 func _ready() -> void:
 	monitoring = true
@@ -14,14 +13,15 @@ func _ready() -> void:
 
 func set_attracted_target(target: Node2D) -> void:
 	attracted_target = target
-	if attracted_target != null and attracted_target.has_method("get"):
-		pickup_range = float(attracted_target.get("pickup_range"))
 
 func _physics_process(delta: float) -> void:
 	if attracted_target == null or not is_instance_valid(attracted_target):
 		return
+	var current_pickup_range := 100.0
+	if attracted_target.has_method("get"):
+		current_pickup_range = float(attracted_target.get("pickup_range"))
 	var distance: float = global_position.distance_to(attracted_target.global_position)
-	if distance > pickup_range:
+	if distance > current_pickup_range:
 		return
 	var direction: Vector2 = global_position.direction_to(attracted_target.global_position)
 	global_position += direction * attract_speed * delta
