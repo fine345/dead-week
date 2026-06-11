@@ -39,6 +39,8 @@ var _exiting := false
 @onready var pause_menu: Control = $Layer/Panel/PauseMenu
 @onready var hud_virtual_joystick: Control = $HUD/VirtualJoystick
 @onready var summary_panel: Control = $Layer/Panel/SummaryPanel
+@onready var exit_confirm_dialog: ConfirmationDialog = $Layer/Panel/ExitConfirmDialog
+@onready var settings_overlay: Control = $Layer/Panel/SettingsOverlay
 
 func _ready() -> void:
 	reward_pool = REWARD_POOL_SCRIPT.new()
@@ -59,16 +61,24 @@ func _ready() -> void:
 		summary_panel.visible = false
 		if summary_panel.has_signal("restart_requested") and not summary_panel.restart_requested.is_connected(_on_summary_restart):
 			summary_panel.restart_requested.connect(_on_summary_restart)
-		if summary_panel.has_signal("exit_to_menu_requested") and not summary_panel.exit_to_menu_requested.is_connected(_on_exit_to_menu):
-			summary_panel.exit_to_menu_requested.connect(_on_exit_to_menu)
+		if summary_panel.has_signal("exit_to_menu_requested") and not summary_panel.exit_to_menu_requested.is_connected(_do_exit_to_menu):
+			summary_panel.exit_to_menu_requested.connect(_do_exit_to_menu)
 	if pause_menu != null:
 		pause_menu.visible = false
 		var resume_btn: Button = pause_menu.get_node_or_null("VBox/ResumeButton")
+		var settings_btn: Button = pause_menu.get_node_or_null("VBox/SettingsButton")
 		var exit_btn: Button = pause_menu.get_node_or_null("VBox/ExitButton")
 		if resume_btn != null:
 			resume_btn.pressed.connect(_on_pause_button_pressed)
+		if settings_btn != null:
+			settings_btn.pressed.connect(_on_open_settings)
 		if exit_btn != null:
 			exit_btn.pressed.connect(_on_exit_to_menu)
+	if exit_confirm_dialog != null:
+		exit_confirm_dialog.confirmed.connect(_do_exit_to_menu)
+	if settings_overlay != null:
+		settings_overlay.visible = false
+		settings_overlay.is_overlay = true
 	_update_hud()
 	_update_game_state_ui()
 
@@ -445,8 +455,20 @@ func _on_summary_restart() -> void:
 	restart_game()
 
 func _on_exit_to_menu() -> void:
+	if exit_confirm_dialog != null:
+		exit_confirm_dialog.popup_centered()
+	else:
+		_do_exit_to_menu()
+
+func _do_exit_to_menu() -> void:
 	if _exiting:
 		return
 	_exiting = true
 	get_tree().paused = false
 	get_tree().change_scene_to_file.call_deferred("res://scenes/ui/main_menu.tscn")
+
+func _on_open_settings() -> void:
+	if settings_overlay != null:
+		settings_overlay.visible = true
+		settings_overlay._update_display()
+		get_tree().paused = true

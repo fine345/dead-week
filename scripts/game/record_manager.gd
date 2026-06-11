@@ -54,3 +54,20 @@ func get_records() -> Array:
 
 func has_records() -> bool:
 	return records.size() > 0
+
+func get_achievements() -> Dictionary:
+	var total_kills := 0
+	var total_time := 0.0
+	var total_games := records.size()
+	var has_no_damage_victory := false
+	for r in records:
+		total_kills += int(r.get("kills", 0))
+		total_time += float(r.get("time", 0))
+		if r.get("result", "") == "victory" and int(r.get("damage_taken", 0)) == 0:
+			has_no_damage_victory = true
+	return {
+		"kills": total_kills,
+		"total_time": int(total_time),
+		"total_games": total_games,
+		"no_damage_victory": has_no_damage_victory
+	}
