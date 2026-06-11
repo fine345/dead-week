@@ -20,15 +20,27 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_apply_input(Vector2.ZERO)
 	var sm = get_node_or_null("/root/SettingsManager")
-	if sm != null and sm.is_fixed_joystick():
+	if sm != null:
+		sm.joystick_mode_changed.connect(_on_joystick_mode_changed)
+		if sm.is_fixed_joystick():
+			_show_fixed()
+		else:
+			base.visible = false
+	else:
+		base.visible = false
+
+func _on_joystick_mode_changed(mode: String) -> void:
+	if mode == "fixed":
 		_show_fixed()
 	else:
+		_reset_joystick()
 		base.visible = false
 
 func _show_fixed() -> void:
 	base.visible = true
 	base.size = Vector2(radius * 2.0, radius * 2.0)
-	position = Vector2(60, 1300)
+	var vp_size := get_viewport_rect().size
+	position = Vector2((vp_size.x - base.size.x) / 2.0, vp_size.y - 300.0 - base.size.y)
 	base.position = Vector2.ZERO
 	base_center = Vector2(radius, radius)
 	knob.position = base_center - knob.size * 0.5

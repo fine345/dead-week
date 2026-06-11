@@ -4,6 +4,8 @@ const SETTINGS_PATH := "user://settings.json"
 var joystick_mode := "anywhere"
 var previous_scene := "res://scenes/ui/main_menu.tscn"
 
+signal joystick_mode_changed(mode: String)
+
 func _ready() -> void:
 	_load()
 
@@ -32,6 +34,7 @@ func _save() -> void:
 func set_joystick_mode(mode: String) -> void:
 	joystick_mode = mode
 	_save()
+	joystick_mode_changed.emit(mode)
 
 func is_fixed_joystick() -> bool:
 	return joystick_mode == "fixed"
