@@ -429,10 +429,10 @@ func _show_summary(is_victory: bool) -> void:
 		enemy_one_timer.paused = true
 	if enemy_two_timer != null:
 		enemy_two_timer.paused = true
+	var score: int = _calculate_score()
 	var damage_taken: int = 0
 	if player != null and player.has_method("get"):
 		damage_taken = int(player.get("total_damage_taken"))
-	var score: int = _calculate_score(damage_taken)
 	var rewards_display: Dictionary = {}
 	for key in reward_counts:
 		rewards_display[reward_pool.get_reward_title(key)] = reward_counts[key]
@@ -442,7 +442,6 @@ func _show_summary(is_victory: bool) -> void:
 		"kills": total_kills,
 		"level": player.level if player != null else 1,
 		"damage_dealt": total_damage_dealt,
-		"damage_taken": damage_taken,
 		"rewards": rewards_display,
 		"score": score
 	})
@@ -466,13 +465,12 @@ func _save_record(is_victory: bool, damage_taken: int, score: int, rewards_displ
 		"rewards": rewards_list
 	})
 
-func _calculate_score(damage_taken: int) -> int:
+func _calculate_score() -> int:
 	return int(
 		elapsed_time * 1
 		+ total_kills * 15
 		+ (player.level if player != null else 1) * 100
 		+ total_damage_dealt * 0.5
-		- damage_taken * 2
 	)
 
 func _on_summary_restart() -> void:

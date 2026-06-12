@@ -48,6 +48,7 @@ var dash_cooldown := 0.0
 var dash_timer := 0.0
 var dash_direction := Vector2.ZERO
 var is_dashing := false
+var _dash_cooldown_bar: ColorRect = null
 const DASH_DISTANCE := 100.0
 const DASH_DURATION := 0.15
 const DASH_COOLDOWN := 1.0
@@ -62,6 +63,7 @@ func _ready() -> void:
 	var col: CollisionShape2D = $CollisionShape2D
 	if col != null:
 		col.disabled = false
+	_dash_cooldown_bar = get_node_or_null("DashCooldownBar")
 	set_physics_process(true)
 	set_process(true)
 	call_deferred("_activate_camera")
@@ -316,6 +318,11 @@ func _physics_process(delta: float) -> void:
 		return
 	if dash_cooldown > 0.0:
 		dash_cooldown = maxf(dash_cooldown - delta, 0.0)
+	if _dash_cooldown_bar != null:
+		_dash_cooldown_bar.visible = dash_cooldown > 0.0
+		if dash_cooldown > 0.0:
+			var ratio := dash_cooldown / DASH_COOLDOWN
+			_dash_cooldown_bar.offset_right = lerpf(-12.0, 12.0, ratio)
 	if dash_timer > 0.0:
 		dash_timer = maxf(dash_timer - delta, 0.0)
 		var dash_speed := DASH_DISTANCE / DASH_DURATION

@@ -12,8 +12,6 @@ signal exit_to_menu_requested
 @onready var level_value: Label = $Panel/VBox/LevelRow/ValueLabel
 @onready var dealt_name: Label = $Panel/VBox/DealtRow/NameLabel
 @onready var dealt_value: Label = $Panel/VBox/DealtRow/ValueLabel
-@onready var taken_name: Label = $Panel/VBox/TakenRow/NameLabel
-@onready var taken_value: Label = $Panel/VBox/TakenRow/ValueLabel
 @onready var rewards_label: Label = $Panel/VBox/RewardsLabel
 @onready var score_label: Label = $Panel/VBox/ScoreLabel
 @onready var retry_button: Button = $Panel/VBox/RetryButton
@@ -36,7 +34,6 @@ func show_summary(stats: Dictionary) -> void:
 	_set_row(kills_name, kills_value, "击杀数量", str(stats.get("kills", 0)))
 	_set_row(level_name, level_value, "最终等级", "Lv.%d" % stats.get("level", 1))
 	_set_row(dealt_name, dealt_value, "造成伤害", str(stats.get("damage_dealt", 0)))
-	_set_row(taken_name, taken_value, "受到伤害", str(stats.get("damage_taken", 0)))
 	var rewards: Dictionary = stats.get("rewards", {})
 	var keys: Array = rewards.keys()
 	var col_count := 2

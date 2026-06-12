@@ -80,7 +80,6 @@ func _add_record_card(record: Dictionary) -> void:
 	var stats_row2 := HBoxContainer.new()
 	stats_row2.add_theme_constant_override("separation", 20)
 	_add_stat(stats_row2, "输出", str(record.get("damage_dealt", 0)))
-	_add_stat(stats_row2, "承伤", str(record.get("damage_taken", 0)))
 	_add_stat(stats_row2, "总分", str(record.get("score", 0)))
 	vbox.add_child(stats_row2)
 

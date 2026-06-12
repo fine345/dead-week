@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://dtl8wwdkyob30"]
 
-[ext_resource type="Script" path="res://scripts/ui/summary_panel.gd" id="1_sp"]
+[ext_resource type="Script" uid="uid://6smlkhunhko6" path="res://scripts/ui/summary_panel.gd" id="1_sp"]
 
-[node name="SummaryPanel" type="Control"]
+[node name="SummaryPanel" type="Control" unique_id=932125590]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,7 +11,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_sp")
 
-[node name="Dim" type="ColorRect" parent="."]
+[node name="Dim" type="ColorRect" parent="." unique_id=1547363688]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -20,7 +20,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.65)
 
-[node name="Panel" type="PanelContainer" parent="."]
+[node name="Panel" type="PanelContainer" parent="." unique_id=201380505]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -34,101 +34,83 @@ offset_bottom = 450.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="Panel"]
+[node name="VBox" type="VBoxContainer" parent="Panel" unique_id=96983657]
 layout_mode = 2
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 theme_override_constants/separation = 12
 
-[node name="TitleLabel" type="Label" parent="Panel/VBox"]
+[node name="TitleLabel" type="Label" parent="Panel/VBox" unique_id=19760862]
 layout_mode = 2
 text = "本局复盘"
 horizontal_alignment = 1
 
-[node name="TimeRow" type="HBoxContainer" parent="Panel/VBox"]
+[node name="TimeRow" type="HBoxContainer" parent="Panel/VBox" unique_id=673387115]
 layout_mode = 2
 
-[node name="NameLabel" type="Label" parent="Panel/VBox/TimeRow"]
+[node name="NameLabel" type="Label" parent="Panel/VBox/TimeRow" unique_id=1959604836]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "存活时间"
 
-[node name="ValueLabel" type="Label" parent="Panel/VBox/TimeRow"]
+[node name="ValueLabel" type="Label" parent="Panel/VBox/TimeRow" unique_id=2134097112]
 layout_mode = 2
 size_flags_horizontal = 10
 text = "0:00"
 
-[node name="KillsRow" type="HBoxContainer" parent="Panel/VBox"]
+[node name="KillsRow" type="HBoxContainer" parent="Panel/VBox" unique_id=1421928535]
 layout_mode = 2
 
-[node name="NameLabel" type="Label" parent="Panel/VBox/KillsRow"]
+[node name="NameLabel" type="Label" parent="Panel/VBox/KillsRow" unique_id=380736396]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "击杀数量"
 
-[node name="ValueLabel" type="Label" parent="Panel/VBox/KillsRow"]
+[node name="ValueLabel" type="Label" parent="Panel/VBox/KillsRow" unique_id=568326178]
 layout_mode = 2
 size_flags_horizontal = 10
 text = "0"
 
-[node name="LevelRow" type="HBoxContainer" parent="Panel/VBox"]
+[node name="LevelRow" type="HBoxContainer" parent="Panel/VBox" unique_id=528141916]
 layout_mode = 2
 
-[node name="NameLabel" type="Label" parent="Panel/VBox/LevelRow"]
+[node name="NameLabel" type="Label" parent="Panel/VBox/LevelRow" unique_id=580332186]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "最终等级"
 
-[node name="ValueLabel" type="Label" parent="Panel/VBox/LevelRow"]
+[node name="ValueLabel" type="Label" parent="Panel/VBox/LevelRow" unique_id=258959846]
 layout_mode = 2
 size_flags_horizontal = 10
 text = "Lv.1"
 
-[node name="DealtRow" type="HBoxContainer" parent="Panel/VBox"]
+[node name="DealtRow" type="HBoxContainer" parent="Panel/VBox" unique_id=455327169]
 layout_mode = 2
 
-[node name="NameLabel" type="Label" parent="Panel/VBox/DealtRow"]
+[node name="NameLabel" type="Label" parent="Panel/VBox/DealtRow" unique_id=1020699508]
 layout_mode = 2
 size_flags_horizontal = 3
 text = "造成伤害"
 
-[node name="ValueLabel" type="Label" parent="Panel/VBox/DealtRow"]
+[node name="ValueLabel" type="Label" parent="Panel/VBox/DealtRow" unique_id=99031439]
 layout_mode = 2
 size_flags_horizontal = 10
 text = "0"
 
-[node name="TakenRow" type="HBoxContainer" parent="Panel/VBox"]
-layout_mode = 2
-
-[node name="NameLabel" type="Label" parent="Panel/VBox/TakenRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "受到伤害"
-
-[node name="ValueLabel" type="Label" parent="Panel/VBox/TakenRow"]
-layout_mode = 2
-size_flags_horizontal = 10
-text = "0"
-
-[node name="RewardsLabel" type="Label" parent="Panel/VBox"]
+[node name="RewardsLabel" type="Label" parent="Panel/VBox" unique_id=535284526]
 layout_mode = 2
 text = "获得奖励："
 autowrap_mode = 2
 
-[node name="ScoreLabel" type="Label" parent="Panel/VBox"]
+[node name="ScoreLabel" type="Label" parent="Panel/VBox" unique_id=1576555027]
 layout_mode = 2
 text = "总分：0"
 horizontal_alignment = 1
 
-[node name="RetryButton" type="Button" parent="Panel/VBox"]
-layout_mode = 2
+[node name="RetryButton" type="Button" parent="Panel/VBox" unique_id=1694624484]
 custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
 text = "再试一次"
 
-[node name="ExitButton" type="Button" parent="Panel/VBox"]
-layout_mode = 2
+[node name="ExitButton" type="Button" parent="Panel/VBox" unique_id=1950216596]
 custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
 text = "退出到主菜单"
