@@ -187,6 +187,9 @@ func _physics_process(delta: float) -> void:
 		return
 	if target == null or not is_instance_valid(target):
 		return
+	var target_dashing: bool = target.is_dashing if target.has_method("get") and "is_dashing" in target else false
+	if target_dashing:
+		return
 	if target.has_method("take_damage"):
 		for i in range(get_slide_collision_count()):
 			var collision := get_slide_collision(i)

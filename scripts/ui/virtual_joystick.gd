@@ -1,5 +1,7 @@
 extends Control
 
+signal joystick_released(direction: Vector2)
+
 @export var radius := 70.0
 @export var deadzone := 0.2
 @export var action_left := "ui_left"
@@ -152,6 +154,9 @@ func _update_from_position(screen_position: Vector2) -> void:
 	_apply_input(input_vector)
 
 func _reset_joystick() -> void:
+	var last_dir := input_vector.normalized()
+	if last_dir.length() > 0.01:
+		joystick_released.emit(last_dir)
 	active = false
 	pointer_id = -1
 	input_vector = Vector2.ZERO

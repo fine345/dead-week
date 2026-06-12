@@ -1,6 +1,6 @@
 extends CharacterBody2D
 
-@export var move_speed := 200.0
+@export var move_speed := 150.0
 @export var max_health := 5
 @export var attack_interval := 0.75
 @export var attack_range := 252.0
@@ -44,13 +44,30 @@ var level := 1
 var is_leveling := false
 var total_damage_taken := 0
 
+var dash_cooldown := 0.0
+var dash_timer := 0.0
+var dash_direction := Vector2.ZERO
+var is_dashing := false
+var _cam_smoothing_was_enabled := false
+var _cam_smoothing_speed := 0.0
+const DASH_DISTANCE := 100.0
+const DASH_DURATION := 0.15
+const DASH_COOLDOWN := 1.0
+
 const BULLET_SCENE := preload("res://scenes/game/bullet.tscn")
 
 func _ready() -> void:
 	health = max_health
+	is_dashing = false
+	dash_timer = 0.0
+	dash_cooldown = 0.0
+	var col: CollisionShape2D = $CollisionShape2D
+	if col != null:
+		col.disabled = false
 	set_physics_process(true)
 	set_process(true)
 	call_deferred("_activate_camera")
+	call_deferred("_connect_joystick")
 
 func _activate_camera() -> void:
 	var camera: Camera2D = $Camera2D
@@ -58,6 +75,34 @@ func _activate_camera() -> void:
 		camera.enabled = true
 		camera.position = Vector2(0, 80)
 		camera.make_current()
+
+func _connect_joystick() -> void:
+	var joy := get_tree().get_first_node_in_group("virtual_joystick")
+	if joy == null:
+		joy = get_node_or_null("/root/Main/HUD/VirtualJoystick")
+	if joy != null and joy.has_signal("joystick_released"):
+		joy.joystick_released.connect(_on_joystick_released)
+
+func _on_joystick_released(direction: Vector2) -> void:
+	if is_dead or is_dashing or dash_cooldown > 0.0:
+		return
+	dash_direction = direction
+	dash_timer = DASH_DURATION
+	dash_cooldown = DASH_COOLDOWN
+	is_dashing = true
+	var camera: Camera2D = $Camera2D
+	if camera != null:
+		_cam_smoothing_was_enabled = camera.position_smoothing_enabled
+		_cam_smoothing_speed = camera.position_smoothing_speed
+		camera.position_smoothing_speed = 12.0
+	var col: CollisionShape2D = $CollisionShape2D
+	if col != null:
+		col.disabled = true
+	for enemy in get_tree().get_nodes_in_group("enemy"):
+		if enemy is PhysicsBody2D:
+			var ecol: CollisionShape2D = enemy.get_node_or_null("CollisionShape2D")
+			if ecol != null:
+				ecol.disabled = true
 
 func set_game(game_ref: Node) -> void:
 	game = game_ref
@@ -160,7 +205,7 @@ func consume_shield() -> bool:
 	return true
 
 func take_damage(amount: int) -> void:
-	if is_dead or invincible_time > 0.0:
+	if is_dead or invincible_time > 0.0 or is_dashing:
 		return
 	if has_shield():
 		consume_shield()
@@ -269,9 +314,9 @@ func _process(delta: float) -> void:
 		return
 	if attack_cooldown > 0.0:
 		attack_cooldown = maxf(attack_cooldown - delta, 0.0)
-	if attack_cooldown <= 0.0 and not is_leveling:
+	if attack_cooldown <= 0.0 and not is_leveling and not is_dashing:
 		_try_auto_attack()
-	if ai_laser_unlocked and not is_leveling:
+	if ai_laser_unlocked and not is_leveling and not is_dashing:
 		_laser_cooldown = maxf(_laser_cooldown - delta, 0.0)
 		if _laser_cooldown <= 0.0:
 			_fire_ai_laser()
@@ -280,6 +325,32 @@ func _process(delta: float) -> void:
 func _physics_process(delta: float) -> void:
 	if is_dead:
 		velocity = Vector2.ZERO
+		return
+	if dash_cooldown > 0.0:
+		dash_cooldown = maxf(dash_cooldown - delta, 0.0)
+	if dash_timer > 0.0:
+		dash_timer = maxf(dash_timer - delta, 0.0)
+		var dash_speed := DASH_DISTANCE / DASH_DURATION
+		velocity = dash_direction * dash_speed
+		position += velocity * delta
+		if dash_timer <= 0.0:
+			is_dashing = false
+			var camera: Camera2D = $Camera2D
+			if camera != null:
+				camera.position_smoothing_enabled = _cam_smoothing_was_enabled
+				camera.position_smoothing_speed = _cam_smoothing_speed
+			collision_layer = 1
+			collision_mask = 2
+			var col: CollisionShape2D = $CollisionShape2D
+			if col != null:
+				col.disabled = false
+			for enemy in get_tree().get_nodes_in_group("enemy"):
+				if enemy is PhysicsBody2D:
+					enemy.collision_layer = 1
+					enemy.collision_mask = 1
+					var ecol: CollisionShape2D = enemy.get_node_or_null("CollisionShape2D")
+					if ecol != null:
+						ecol.disabled = false
 		return
 	var direction := Vector2.ZERO
 	direction.x = Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
