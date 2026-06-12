@@ -293,7 +293,12 @@ func _update_game_state_ui() -> void:
 	if hud_retry_button != null:
 		hud_retry_button.visible = false
 	if hud_virtual_joystick != null:
-		hud_virtual_joystick.visible = show_joystick
+		var sm = get_node_or_null("/root/SettingsManager")
+		var is_fixed: bool = sm.is_fixed_joystick() if sm != null else false
+		if is_fixed:
+			hud_virtual_joystick.visible = not game_over_visible and not summary_shown
+		else:
+			hud_virtual_joystick.visible = show_joystick
 		hud_virtual_joystick.mouse_filter = Control.MOUSE_FILTER_IGNORE if not show_joystick else Control.MOUSE_FILTER_STOP
 		if hud_virtual_joystick.has_method("set_enabled"):
 			hud_virtual_joystick.call("set_enabled", show_joystick)
@@ -338,9 +343,11 @@ func _restart_game() -> void:
 	total_kills = 0
 	total_damage_dealt = 0
 	if enemy_one_timer != null:
+		enemy_one_timer.paused = false
 		enemy_one_timer.stop()
 		enemy_one_timer.start()
 	if enemy_two_timer != null:
+		enemy_two_timer.paused = false
 		enemy_two_timer.stop()
 		enemy_two_timer.start()
 	_update_hud()

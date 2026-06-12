@@ -35,7 +35,7 @@ func _on_joystick_mode_changed(mode: String) -> void:
 	if mode == "fixed":
 		_show_fixed()
 	else:
-		_reset_joystick()
+		_reset_joystick(false)
 		base.visible = false
 
 func _show_fixed() -> void:
@@ -51,17 +51,20 @@ func set_enabled(value: bool) -> void:
 	enabled = value
 	if not enabled:
 		if active:
-			_reset_joystick()
-		base.visible = false
+			_reset_joystick(false)
+		var sm = get_node_or_null("/root/SettingsManager")
+		var is_fixed: bool = sm.is_fixed_joystick() if sm != null else false
+		if not is_fixed:
+			base.visible = false
 
 func _input(event: InputEvent) -> void:
 	if not enabled:
 		if active:
-			_reset_joystick()
+			_reset_joystick(true)
 		return
 	if get_tree().paused:
 		if active:
-			_reset_joystick()
+			_reset_joystick(false)
 		return
 
 	var sm = get_node_or_null("/root/SettingsManager")
@@ -102,7 +105,7 @@ func _handle_free_input(event: InputEvent) -> void:
 
 func _handle_fixed_input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
-		if event.pressed and _is_in_joystick_area(event.position):
+		if event.pressed and not _is_over_ui(event.position):
 			active = true
 			pointer_id = event.index
 			_update_from_position(event.position)
@@ -114,7 +117,7 @@ func _handle_fixed_input(event: InputEvent) -> void:
 		_update_from_position(event.position)
 		get_viewport().set_input_as_handled()
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
-		if event.pressed and _is_in_joystick_area(event.position):
+		if event.pressed and not _is_over_ui(event.position):
 			active = true
 			pointer_id = 0
 			_update_from_position(event.position)
@@ -153,9 +156,9 @@ func _update_from_position(screen_position: Vector2) -> void:
 	knob.position = base_center + delta - knob.size * 0.5
 	_apply_input(input_vector)
 
-func _reset_joystick() -> void:
+func _reset_joystick(emit_release := true) -> void:
 	var last_dir := input_vector.normalized()
-	if last_dir.length() > 0.01:
+	if emit_release and last_dir.length() > 0.01:
 		joystick_released.emit(last_dir)
 	active = false
 	pointer_id = -1
