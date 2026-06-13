@@ -37,14 +37,17 @@ func _ready() -> void:
 	_apply_enemy_visual()
 
 func _apply_enemy_visual() -> void:
-	var visual: ColorRect = $Visual
+	var visual: Panel = $Visual
 	if visual == null:
+		return
+	var style: StyleBoxFlat = visual.get_theme_stylebox("panel") as StyleBoxFlat
+	if style == null:
 		return
 	match enemy_type:
 		2:
-			visual.color = Color(0.95, 0.55, 0.2, 1.0)
+			style.bg_color = Color(0.95, 0.55, 0.2, 1.0)
 		_:
-			visual.color = Color(0.9, 0.2, 0.3, 1.0)
+			style.bg_color = Color(0.9, 0.2, 0.3, 1.0)
 
 func apply_freeze(duration: float) -> void:
 	freeze_timer = maxf(freeze_timer, duration)

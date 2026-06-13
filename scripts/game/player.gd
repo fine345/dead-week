@@ -322,7 +322,7 @@ func _physics_process(delta: float) -> void:
 		_dash_cooldown_bar.visible = dash_cooldown > 0.0
 		if dash_cooldown > 0.0:
 			var ratio := dash_cooldown / DASH_COOLDOWN
-			_dash_cooldown_bar.offset_right = lerpf(-12.0, 12.0, ratio)
+			_dash_cooldown_bar.offset_right = lerpf(-9.0, 9.0, ratio)
 	if dash_timer > 0.0:
 		dash_timer = maxf(dash_timer - delta, 0.0)
 		var dash_speed := DASH_DISTANCE / DASH_DURATION
