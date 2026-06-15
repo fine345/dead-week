@@ -4,6 +4,8 @@ const PLAYER_SCENE := preload("res://scenes/game/player.tscn")
 const ENEMY_TYPE1_SCENE := preload("res://scenes/game/enemy_type1.tscn")
 const ENEMY_TYPE2_SCENE := preload("res://scenes/game/enemy_type2.tscn")
 const EXPERIENCE_SCENE := preload("res://scenes/game/experience.tscn")
+const BOSS1_SCENE := preload("res://scenes/game/boss1.tscn")
+const BOSS_REWARD_SCENE := preload("res://scenes/game/boss_reward.tscn")
 const REWARD_POOL_SCRIPT := preload("res://scripts/ui/reward_pool.gd")
 
 @export var enemy_one_spawn_interval := 1.5
@@ -31,6 +33,11 @@ var summary_shown := false
 var _exiting := false
 var _unpause_ramp_time := 0.0
 var _is_ramping := false
+var boss1_spawned := false
+var boss1_node: Node2D = null
+var boss_boundary_active := false
+var boss_boundary_rect := Rect2(Vector2(-440, -600), Vector2(1600, 1600))
+var boss_health_bar: Control = null
 
 @onready var enemy_one_timer: Timer = $EnemyTimer
 @onready var enemy_two_timer: Timer = Timer.new()
@@ -44,6 +51,7 @@ var _is_ramping := false
 @onready var summary_panel: Control = $Layer/Panel/SummaryPanel
 @onready var exit_confirm_dialog: ConfirmationDialog = $Layer/Panel/ExitConfirmDialog
 @onready var settings_overlay: Control = $Layer/Panel/SettingsOverlay
+@onready var boss_health_bar_node: Control = $Layer/Panel/BossHealthBar
 
 func _ready() -> void:
 	reward_pool = REWARD_POOL_SCRIPT.new()
@@ -82,6 +90,9 @@ func _ready() -> void:
 	if settings_overlay != null:
 		settings_overlay.visible = false
 		settings_overlay.is_overlay = true
+	boss_health_bar = boss_health_bar_node
+	if boss_health_bar != null:
+		boss_health_bar.visible = false
 	_update_hud()
 	_update_game_state_ui()
 
@@ -153,6 +164,61 @@ func _spawn_enemy_two() -> void:
 		enemy.tree_exited.connect(_on_enemy_tree_exited.bind(enemy))
 	enemy.set_target(player)
 
+func _spawn_boss1() -> void:
+	if boss1_spawned or player == null or player.is_dead:
+		return
+	boss1_spawned = true
+	var boss := BOSS1_SCENE.instantiate()
+	boss.position = player.position + Vector2(0, -200)
+	add_child(boss)
+	boss1_node = boss
+	if boss.has_method("set_game"):
+		boss.set_game(self)
+	if boss.has_method("set_target"):
+		boss.set_target(player)
+	if boss.has_signal("tree_exited"):
+		boss.tree_exited.connect(_on_boss1_tree_exited.bind(boss))
+	spawned_enemies.append(boss)
+	_clear_enemies_in_range(boss.global_position, 200.0)
+	_enable_boss_boundary()
+	if boss_health_bar != null:
+		boss_health_bar.show_boss(boss)
+
+func _clear_enemies_in_range(center: Vector2, radius: float) -> void:
+	var to_remove: Array[Node] = []
+	for enemy in spawned_enemies:
+		if is_instance_valid(enemy) and not enemy.is_in_group("boss"):
+			if enemy.global_position.distance_to(center) <= radius:
+				to_remove.append(enemy)
+	for enemy in to_remove:
+		spawned_enemies.erase(enemy)
+		enemy.queue_free()
+
+func _enable_boss_boundary() -> void:
+	boss_boundary_active = true
+	if boss1_node != null:
+		var center := boss1_node.global_position
+		boss_boundary_rect = Rect2(Vector2(center.x - 800, center.y - 800), Vector2(1600, 1600))
+	queue_redraw()
+
+func _on_boss1_tree_exited(enemy: Node) -> void:
+	spawned_enemies.erase(enemy)
+	boss1_node = null
+	boss_boundary_active = false
+	queue_redraw()
+	if boss_health_bar != null:
+		boss_health_bar.hide_boss()
+	_update_hud()
+	_update_game_state_ui()
+	_update_spawn_timers()
+
+func _spawn_boss_reward(position: Vector2) -> void:
+	var reward := BOSS_REWARD_SCENE.instantiate()
+	reward.global_position = position
+	if reward.has_method("set_attracted_target") and player != null:
+		reward.set_attracted_target(player)
+	add_child(reward)
+
 func _get_spawn_offset() -> Vector2:
 	var half_width := enemy_spawn_distance.x * 0.5
 	var half_height := enemy_spawn_distance.y * 0.5
@@ -192,10 +258,13 @@ func on_enemy_died(enemy: Node) -> void:
 	spawned_enemies.erase(enemy)
 	total_kills += 1
 	if enemy != null:
-		var drop_value := 5
-		if enemy.has_method("get"):
-			drop_value = int(enemy.get("experience_drop"))
-		_spawn_experience(enemy.global_position, drop_value)
+		if enemy.is_in_group("boss"):
+			_spawn_boss_reward(enemy.global_position)
+		else:
+			var drop_value := 5
+			if enemy.has_method("get"):
+				drop_value = int(enemy.get("experience_drop"))
+			_spawn_experience(enemy.global_position, drop_value)
 	_update_hud()
 	_update_game_state_ui()
 	_update_spawn_timers()
@@ -232,11 +301,19 @@ func _process(delta: float) -> void:
 	elapsed_time += delta
 	enemy_two_unlocked = elapsed_time >= enemy_time_relief_start
 	_update_spawn_timers()
+	if not boss1_spawned and elapsed_time >= 180.0:
+		_spawn_boss1()
+	if boss_boundary_active and player != null and not player.is_dead:
+		player.position = player.position.clamp(boss_boundary_rect.position, boss_boundary_rect.end)
+	if boss_boundary_active and boss1_node != null and is_instance_valid(boss1_node):
+		boss1_node.position = boss1_node.position.clamp(boss_boundary_rect.position, boss_boundary_rect.end)
 	if Input.is_key_pressed(KEY_R) and player != null and player.is_dead:
 		restart_game()
 	if Input.is_key_pressed(KEY_Q):
 		_prepare_reward_offers()
 		_pause_for_level_up()
+	if Input.is_key_pressed(KEY_1):
+		_spawn_boss1()
 	_update_hud()
 	_update_game_state_ui()
 
@@ -335,6 +412,12 @@ func _restart_game() -> void:
 			experience.queue_free()
 	spawned_enemies.clear()
 	spawned_experiences.clear()
+	boss1_spawned = false
+	boss1_node = null
+	boss_boundary_active = false
+	queue_redraw()
+	if boss_health_bar != null:
+		boss_health_bar.hide_boss()
 	for child in get_children():
 		if child is Node2D and child != player and child != enemy_one_timer and child != level_up_panel and child != hud_virtual_joystick:
 			if child.name.begins_with("Bullet") or child.name.begins_with("Ruler") or child.name.begins_with("AILaser"):
@@ -503,3 +586,7 @@ func _on_open_settings() -> void:
 		settings_overlay.visible = true
 		settings_overlay._update_display()
 		get_tree().paused = true
+
+func _draw() -> void:
+	if boss_boundary_active:
+		draw_rect(boss_boundary_rect, Color.RED, false, 3.0)

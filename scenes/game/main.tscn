@@ -1,12 +1,13 @@
-[gd_scene load_steps=8 format=3 uid="uid://dyvgsv0f01a1a"]
+[gd_scene format=3 uid="uid://dyvgsv0f01a1a"]
 
 [ext_resource type="Script" uid="uid://cgag7c0dle264" path="res://scripts/game/main.gd" id="1_llaio"]
 [ext_resource type="PackedScene" uid="uid://ctcvd8wy0rnhn" path="res://scenes/ui/level_up_panel.tscn" id="2_oekm8"]
 [ext_resource type="Script" uid="uid://c85wuuqkide8j" path="res://scripts/ui/level_up_panel.gd" id="3_yd8kv"]
 [ext_resource type="PackedScene" uid="uid://bn8jggr1tiupa" path="res://scenes/ui/virtual_joystick.tscn" id="4_iba00"]
 [ext_resource type="Script" uid="uid://dubx6ob6i50j0" path="res://scripts/game/grid_background.gd" id="4_uaf1y"]
-[ext_resource type="PackedScene" path="res://scenes/ui/summary_panel.tscn" id="6_j7lav"]
+[ext_resource type="PackedScene" uid="uid://dtl8wwdkyob30" path="res://scenes/ui/summary_panel.tscn" id="6_j7lav"]
 [ext_resource type="PackedScene" path="res://scenes/ui/settings.tscn" id="7_settings"]
+[ext_resource type="PackedScene" uid="uid://dukqqin6bftnl" path="res://scenes/ui/boss_health_bar.tscn" id="8_5v64u"]
 
 [node name="Main" type="Node2D" unique_id=1706105945]
 script = ExtResource("1_llaio")
@@ -114,7 +115,7 @@ custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
 text = "继续游戏"
 
-[node name="SettingsButton" type="Button" parent="Layer/Panel/PauseMenu/VBox"]
+[node name="SettingsButton" type="Button" parent="Layer/Panel/PauseMenu/VBox" unique_id=1984925037]
 custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
 text = "设置"
@@ -128,18 +129,19 @@ text = "放弃"
 z_index = 250
 layout_mode = 1
 
-[node name="ExitConfirmDialog" type="ConfirmationDialog" parent="Layer/Panel"]
+[node name="ExitConfirmDialog" type="ConfirmationDialog" parent="Layer/Panel" unique_id=2080680080]
 process_mode = 3
-z_index = 300
-dialog_text = "中途退出不会保存游戏！确定退出？"
 ok_button_text = "确定"
+dialog_text = "中途退出不会保存游戏！确定退出？"
 cancel_button_text = "取消"
 
-[connection signal="pressed" from="Layer/Panel/RetryButton" to="." method="restart_game"]
-
-[node name="SettingsOverlay" parent="Layer/Panel" instance=ExtResource("7_settings")]
+[node name="SettingsOverlay" parent="Layer/Panel" unique_id=1721139600 instance=ExtResource("7_settings")]
 visible = false
 z_index = 260
 layout_mode = 1
 
+[node name="BossHealthBar" parent="Layer/Panel" unique_id=1313253364 instance=ExtResource("8_5v64u")]
+layout_mode = 1
+
+[connection signal="pressed" from="Layer/Panel/RetryButton" to="." method="restart_game"]
 [connection signal="pressed" from="Layer/Panel/PauseButton" to="." method="_on_pause_button_pressed"]

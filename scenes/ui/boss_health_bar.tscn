@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://dukqqin6bftnl"]
+
+[ext_resource type="Script" uid="uid://rc7qnau230ho" path="res://scripts/ui/boss_health_bar.gd" id="1_70265"]
+
+[node name="BossHealthBar" type="Control" unique_id=1313253364]
+layout_mode = 3
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 160.0
+offset_top = 20.0
+offset_right = -160.0
+offset_bottom = 40.0
+grow_horizontal = 2
+script = ExtResource("1_70265")
+
+[node name="Background" type="ColorRect" parent="." unique_id=458979420]
+layout_mode = 0
+color = Color(0.2, 0.2, 0.2, 0.8)
+
+[node name="LostHealthBar" type="ColorRect" parent="." unique_id=569751803]
+layout_mode = 0
+color = Color(0.6, 0.1, 0.1, 0.8)
+
+[node name="CurrentHealthBar" type="ColorRect" parent="." unique_id=1070924726]
+layout_mode = 0
+color = Color(0.8, 0.2, 0.2, 1)
