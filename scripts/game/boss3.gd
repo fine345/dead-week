@@ -2,7 +2,7 @@ extends "res://scripts/game/enemy_base.gd"
 
 enum BossState {
 	CHASE,
-	SKILL1_APPROACH, SKILL1_WARN, SKILL1_UP, SKILL1_HOVER, SKILL1_DOWN,
+	SKILL1_WARN, SKILL1_UP, SKILL1_DOWN,
 	SKILL2_APPROACH, SKILL2_WARN1, SKILL2_LASER1, SKILL2_DASH, SKILL2_WARN2, SKILL2_LASER2,
 	IDLE, COOLDOWN
 }
@@ -70,14 +70,10 @@ func _physics_process(delta: float) -> void:
 	match current_state:
 		BossState.CHASE:
 			_process_chase(delta)
-		BossState.SKILL1_APPROACH:
-			_process_skill1_approach(delta)
 		BossState.SKILL1_WARN:
 			_process_skill1_warn(delta)
 		BossState.SKILL1_UP:
 			_process_skill1_up(delta)
-		BossState.SKILL1_HOVER:
-			_process_skill1_hover(delta)
 		BossState.SKILL1_DOWN:
 			_process_skill1_down(delta)
 		BossState.SKILL2_APPROACH:
@@ -98,7 +94,7 @@ func _physics_process(delta: float) -> void:
 			_process_cooldown(delta)
 
 	move_and_slide()
-	if current_state in [BossState.SKILL1_WARN, BossState.SKILL1_HOVER, BossState.SKILL2_WARN1, BossState.SKILL2_WARN2, BossState.SKILL2_LASER1, BossState.SKILL2_LASER2, BossState.IDLE]:
+	if current_state in [BossState.SKILL1_WARN, BossState.SKILL2_WARN1, BossState.SKILL2_WARN2, BossState.SKILL2_LASER1, BossState.SKILL2_LASER2, BossState.IDLE]:
 		global_position = lock_position
 		velocity = Vector2.ZERO
 	_push_nearby_enemies()
@@ -110,73 +106,61 @@ func _process_chase(_delta: float) -> void:
 		velocity = Vector2.ZERO
 		return
 	var dist := global_position.distance_to(target.global_position)
-	if dist > SKILL1_RANGE:
-		var direction := global_position.direction_to(target.global_position)
-		velocity = direction * move_speed
-	elif dist <= SKILL2_RANGE:
+	if dist <= SKILL2_RANGE:
 		_enter_skill2()
 	else:
 		_enter_skill1()
 
 func _enter_skill1() -> void:
-	current_state = BossState.SKILL1_APPROACH
-	move_speed = 300.0
-
-func _process_skill1_approach(_delta: float) -> void:
-	move_speed = 300.0
-	if target == null or not is_instance_valid(target):
-		velocity = Vector2.ZERO
-		return
-	var dist := global_position.distance_to(target.global_position)
-	if dist <= 100.0:
-		_enter_skill1_warn()
-		return
-	var direction := global_position.direction_to(target.global_position)
-	velocity = direction * move_speed
-
-func _enter_skill1_warn() -> void:
 	current_state = BossState.SKILL1_WARN
-	state_timer = 0.3
+	state_timer = 0.1
 	velocity = Vector2.ZERO
 	move_speed = 0.0
-	if target != null and is_instance_valid(target):
-		lock_position = target.global_position
-		locked_direction = global_position.direction_to(lock_position)
-	_show_circle_warning(lock_position, 20.0)
-	_set_collision_enabled(false)
-	_set_visual_alpha(0.5)
+	lock_position = global_position
 
 func _process_skill1_warn(delta: float) -> void:
 	state_timer -= delta
+	velocity = Vector2.ZERO
 	if state_timer <= 0.0:
+		if target != null and is_instance_valid(target):
+			lock_position = target.global_position
+		_show_circle_warning(lock_position, 50.0)
 		current_state = BossState.SKILL1_UP
 		state_timer = 0.6
-		_hide_warning()
 
 func _process_skill1_up(delta: float) -> void:
 	state_timer -= delta
-	var target_pos := lock_position + Vector2(0, -50)
-	global_position = global_position.move_toward(target_pos, 200.0 * delta)
+	velocity = Vector2.ZERO
+	global_position += Vector2(0, -75.0 / 0.6) * delta
 	if state_timer <= 0.0:
-		global_position = target_pos
-		current_state = BossState.SKILL1_HOVER
-		state_timer = 0.6
-
-func _process_skill1_hover(delta: float) -> void:
-	state_timer -= delta
-	if state_timer <= 0.0:
+		_set_collision_enabled(false)
+		_set_visual_alpha(0.5)
 		current_state = BossState.SKILL1_DOWN
-		state_timer = 0.3
+		state_timer = 0.1
 
 func _process_skill1_down(delta: float) -> void:
 	state_timer -= delta
-	global_position = global_position.move_toward(lock_position, 400.0 * delta)
+	velocity = Vector2.ZERO
+	if state_timer > 0.05:
+		global_position = lock_position + Vector2(0, -75)
+	else:
+		global_position = global_position.move_toward(lock_position, 600.0 * delta)
 	if state_timer <= 0.0:
 		global_position = lock_position
 		_set_collision_enabled(true)
 		_set_visual_alpha(1.0)
-		_push_at_position(lock_position, 40.0)
+		_hide_warning()
+		_damage_in_range(lock_position, 50.0)
+		_push_at_position(lock_position, 50.0)
 		_enter_idle()
+
+func _damage_in_range(pos: Vector2, radius: float) -> void:
+	var game_node := get_tree().current_scene
+	if game_node == null:
+		return
+	if game_node.player != null and is_instance_valid(game_node.player):
+		if pos.distance_to(game_node.player.global_position) <= radius:
+			game_node.player.take_damage(touch_damage)
 
 func _enter_skill2() -> void:
 	current_state = BossState.SKILL2_APPROACH
@@ -376,7 +360,9 @@ func _push_at_position(pos: Vector2, radius: float) -> void:
 	if target != null and is_instance_valid(target):
 		var dist := pos.distance_to(target.global_position)
 		if dist < radius:
-			target.global_position += pos.direction_to(target.global_position) * 60.0
+			var push_angle := randf() * TAU
+			var push_dir := Vector2(cos(push_angle), sin(push_angle))
+			target.global_position += push_dir * 40.0
 
 func _push_nearby_enemies() -> void:
 	var game_node := get_tree().current_scene
