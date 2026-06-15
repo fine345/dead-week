@@ -9,6 +9,7 @@ const BOSS_REWARD_SCENE := preload("res://scenes/game/boss_reward.tscn")
 const BOSS2_SCENE := preload("res://scenes/game/boss2.tscn")
 const ENEMY_TYPE3_SCENE := preload("res://scenes/game/enemy_type3.tscn")
 const ENEMY_TYPE4_SCENE := preload("res://scenes/game/enemy_type4.tscn")
+const BOSS3_SCENE := preload("res://scenes/game/boss3.tscn")
 const REWARD_POOL_SCRIPT := preload("res://scripts/ui/reward_pool.gd")
 
 @export var enemy_one_spawn_interval := 1.5
@@ -40,6 +41,8 @@ var boss1_spawned := false
 var boss1_node: Node2D = null
 var boss2_spawned := false
 var boss2_node: Node2D = null
+var boss3_spawned := false
+var boss3_node: Node2D = null
 var enemy_three_unlocked := false
 var enemy_four_unlocked := false
 var _key2_pressed := false
@@ -310,6 +313,43 @@ func _on_boss2_tree_exited(enemy: Node) -> void:
 	enemy4_timer.timeout.connect(func(): enemy_four_unlocked = true)
 	add_child(enemy4_timer)
 	enemy4_timer.start()
+	var boss3_timer := Timer.new()
+	boss3_timer.one_shot = true
+	boss3_timer.wait_time = 180.0
+	boss3_timer.timeout.connect(func(): _spawn_boss3())
+	add_child(boss3_timer)
+	boss3_timer.start()
+	_update_hud()
+	_update_game_state_ui()
+	_update_spawn_timers()
+
+func _spawn_boss3() -> void:
+	if boss3_spawned or player == null or player.is_dead:
+		return
+	boss3_spawned = true
+	var boss := BOSS3_SCENE.instantiate()
+	boss.position = player.position + Vector2(0, -200)
+	add_child(boss)
+	boss3_node = boss
+	if boss.has_method("set_game"):
+		boss.set_game(self)
+	if boss.has_method("set_target"):
+		boss.set_target(player)
+	if boss.has_signal("tree_exited"):
+		boss.tree_exited.connect(_on_boss3_tree_exited.bind(boss))
+	spawned_enemies.append(boss)
+	_clear_enemies_in_range(boss.global_position, 200.0)
+	_enable_boss_boundary()
+	if boss_health_bar != null:
+		boss_health_bar.show_boss(boss)
+
+func _on_boss3_tree_exited(enemy: Node) -> void:
+	spawned_enemies.erase(enemy)
+	boss3_node = null
+	boss_boundary_active = false
+	queue_redraw()
+	if boss_health_bar != null:
+		boss_health_bar.hide_boss()
 	_update_hud()
 	_update_game_state_ui()
 	_update_spawn_timers()
@@ -363,10 +403,13 @@ func on_enemy_died(enemy: Node) -> void:
 	total_kills += 1
 	if enemy != null:
 		if enemy.is_in_group("boss"):
-			var levels := 1
-			if enemy.is_in_group("boss2"):
-				levels = 2
-			_spawn_boss_reward(enemy.global_position, levels)
+			if enemy.is_in_group("boss3"):
+				_show_summary(true)
+			else:
+				var levels := 1
+				if enemy.is_in_group("boss2"):
+					levels = 2
+				_spawn_boss_reward(enemy.global_position, levels)
 		else:
 			var drop_value := 5
 			if enemy.has_method("get"):
@@ -432,6 +475,8 @@ func _process(delta: float) -> void:
 	if Input.is_key_pressed(KEY_4):
 		enemy_four_unlocked = true
 		_spawn_enemy_four()
+	if Input.is_key_pressed(KEY_5):
+		_spawn_boss3()
 	_update_hud()
 	_update_game_state_ui()
 
@@ -538,6 +583,8 @@ func _restart_game() -> void:
 	boss1_node = null
 	boss2_spawned = false
 	boss2_node = null
+	boss3_spawned = false
+	boss3_node = null
 	boss_boundary_active = false
 	enemy_three_unlocked = false
 	enemy_four_unlocked = false

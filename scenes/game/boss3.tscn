@@ -1,0 +1,27 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/game/boss3.gd" id="1_b3"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_b3"]
+size = Vector2(38, 38)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b3"]
+bg_color = Color(0.9, 0.4, 0.1, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[node name="Boss3" type="CharacterBody2D" groups=["enemy", "boss", "boss3"]]
+collision_layer = 1
+script = ExtResource("1_b3")
+
+[node name="Visual" type="Panel" parent="."]
+offset_left = -19.0
+offset_top = -19.0
+offset_right = 19.0
+offset_bottom = 19.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_b3")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_b3")
