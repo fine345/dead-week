@@ -53,12 +53,12 @@ func apply_freeze(duration: float) -> void:
 		freeze_effect_instance.set_effect_lifetime(duration)
 	freeze_effect_instance.global_position = global_position
 
-func apply_burn(duration: float, damage_per_tick: int = 1) -> void:
-	burn_timer = maxf(burn_timer, duration)
+func apply_burn(_duration: float, _damage_per_tick: int = 1) -> void:
+	burn_timer = maxf(burn_timer, 0.8)
 	burn_tick_timer = 0.0
 	burn_tick_accumulator = 0.0
-	burn_ticks_remaining = 5
-	burn_damage_per_tick = damage_per_tick
+	burn_ticks_remaining = 4
+	burn_damage_per_tick = max(1, int(round(max_health * 0.1)))
 	if burn_effect_instance == null or not is_instance_valid(burn_effect_instance):
 		var effect_scene := preload("res://scenes/effect/burn_effect.tscn")
 		burn_effect_instance = effect_scene.instantiate() as Node2D
@@ -70,7 +70,7 @@ func apply_burn(duration: float, damage_per_tick: int = 1) -> void:
 	if burn_effect_instance.has_method("set_effect_size"):
 		burn_effect_instance.set_effect_size(Vector2(30, 30))
 	if burn_effect_instance.has_method("set_effect_lifetime"):
-		burn_effect_instance.set_effect_lifetime(duration)
+		burn_effect_instance.set_effect_lifetime(0.8)
 	burn_effect_instance.global_position = global_position
 
 func apply_knockback(from_position: Vector2, force: float) -> void:

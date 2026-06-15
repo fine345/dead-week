@@ -8,6 +8,7 @@ const BOSS1_SCENE := preload("res://scenes/game/boss1.tscn")
 const BOSS_REWARD_SCENE := preload("res://scenes/game/boss_reward.tscn")
 const BOSS2_SCENE := preload("res://scenes/game/boss2.tscn")
 const ENEMY_TYPE3_SCENE := preload("res://scenes/game/enemy_type3.tscn")
+const ENEMY_TYPE4_SCENE := preload("res://scenes/game/enemy_type4.tscn")
 const REWARD_POOL_SCRIPT := preload("res://scripts/ui/reward_pool.gd")
 
 @export var enemy_one_spawn_interval := 1.5
@@ -40,6 +41,7 @@ var boss1_node: Node2D = null
 var boss2_spawned := false
 var boss2_node: Node2D = null
 var enemy_three_unlocked := false
+var enemy_four_unlocked := false
 var _key2_pressed := false
 var boss_boundary_active := false
 var boss_boundary_rect := Rect2(Vector2(-440, -600), Vector2(1600, 1600))
@@ -195,6 +197,22 @@ func _spawn_enemy_three() -> void:
 		enemy.tree_exited.connect(_on_enemy_tree_exited.bind(enemy))
 	enemy.set_target(player)
 
+func _spawn_enemy_four() -> void:
+	if not enemy_four_unlocked:
+		return
+	if player == null or player.is_dead:
+		return
+	var enemy := ENEMY_TYPE4_SCENE.instantiate()
+	var offset := _get_spawn_offset()
+	enemy.position = player.position + offset
+	add_child(enemy)
+	spawned_enemies.append(enemy)
+	if enemy.has_method("set_game"):
+		enemy.set_game(self)
+	if enemy.has_signal("tree_exited"):
+		enemy.tree_exited.connect(_on_enemy_tree_exited.bind(enemy))
+	enemy.set_target(player)
+
 func _spawn_boss1() -> void:
 	if boss1_spawned or player == null or player.is_dead:
 		return
@@ -286,6 +304,12 @@ func _on_boss2_tree_exited(enemy: Node) -> void:
 	queue_redraw()
 	if boss_health_bar != null:
 		boss_health_bar.hide_boss()
+	var enemy4_timer := Timer.new()
+	enemy4_timer.one_shot = true
+	enemy4_timer.wait_time = 30.0
+	enemy4_timer.timeout.connect(func(): enemy_four_unlocked = true)
+	add_child(enemy4_timer)
+	enemy4_timer.start()
 	_update_hud()
 	_update_game_state_ui()
 	_update_spawn_timers()
@@ -405,6 +429,9 @@ func _process(delta: float) -> void:
 		_key2_pressed = false
 	if Input.is_key_pressed(KEY_3):
 		_spawn_boss2()
+	if Input.is_key_pressed(KEY_4):
+		enemy_four_unlocked = true
+		_spawn_enemy_four()
 	_update_hud()
 	_update_game_state_ui()
 
@@ -513,6 +540,7 @@ func _restart_game() -> void:
 	boss2_node = null
 	boss_boundary_active = false
 	enemy_three_unlocked = false
+	enemy_four_unlocked = false
 	queue_redraw()
 	if boss_health_bar != null:
 		boss_health_bar.hide_boss()
