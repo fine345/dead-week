@@ -1,7 +1,7 @@
 extends "res://scripts/game/enemy_base.gd"
 
 func _ready() -> void:
-	max_health = 200
+	max_health = 400
 	move_speed = 150.0
 	experience_drop = 35
 	super._ready()

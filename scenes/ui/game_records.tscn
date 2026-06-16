@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://bla6o8sl5qksm"]
 
-[ext_resource type="Script" path="res://scripts/ui/game_records.gd" id="1_gr"]
+[ext_resource type="Script" uid="uid://ryje3xy5dul8" path="res://scripts/ui/game_records.gd" id="1_gr"]
 
-[node name="GameRecords" type="Control"]
+[node name="GameRecords" type="Control" unique_id=416642955]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,7 +11,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_gr")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=471768101]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -20,7 +20,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.1, 0.1, 0.15, 1)
 
-[node name="Panel" type="PanelContainer" parent="."]
+[node name="Panel" type="PanelContainer" parent="." unique_id=1454554402]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -32,40 +32,128 @@ offset_bottom = -40.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="Panel"]
+[node name="VBox" type="VBoxContainer" parent="Panel" unique_id=509626036]
 layout_mode = 2
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
 theme_override_constants/separation = 8
 
-[node name="TitleLabel" type="Label" parent="Panel/VBox"]
+[node name="TitleLabel" type="Label" parent="Panel/VBox" unique_id=1319733819]
 layout_mode = 2
 text = "游戏记录"
 horizontal_alignment = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="Panel/VBox"]
+[node name="RecordsList" type="VBoxContainer" parent="Panel/VBox" unique_id=146927902]
 layout_mode = 2
 size_flags_vertical = 3
-size_flags_stretch_ratio = 1.0
-follow_focus = true
-
-[node name="RecordsList" type="VBoxContainer" parent="Panel/VBox/ScrollContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="EmptyLabel" type="Label" parent="Panel/VBox"]
+[node name="PageInfo" type="HBoxContainer" parent="Panel/VBox" unique_id=967907625]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="PrevButton" type="Button" parent="Panel/VBox/PageInfo" unique_id=325783220]
+custom_minimum_size = Vector2(120, 40)
+layout_mode = 2
+text = "上一页"
+
+[node name="PageLabel" type="Label" parent="Panel/VBox/PageInfo" unique_id=690426600]
+layout_mode = 2
+text = "第1/1页"
+
+[node name="NextButton" type="Button" parent="Panel/VBox/PageInfo" unique_id=267023346]
+custom_minimum_size = Vector2(120, 40)
+layout_mode = 2
+text = "下一页"
+
+[node name="EmptyLabel" type="Label" parent="Panel/VBox" unique_id=605551678]
 visible = false
 layout_mode = 2
 text = "暂无记录"
 horizontal_alignment = 1
 
-[node name="BackButton" type="Button" parent="Panel/VBox"]
-layout_mode = 2
+[node name="BackButton" type="Button" parent="Panel/VBox" unique_id=919623598]
 custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
 size_flags_horizontal = 4
 text = "返回"
+
+[node name="DetailPanel" type="Control" parent="." unique_id=1293289939]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="DetailPanel" unique_id=1427969435]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.8)
+
+[node name="DetailBox" type="PanelContainer" parent="DetailPanel" unique_id=2014871404]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -200.0
+offset_right = 250.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="DetailPanel/DetailBox" unique_id=2021476201]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="DetailPanel/DetailBox/VBox" unique_id=847940365]
+layout_mode = 2
+text = "记录详情"
+horizontal_alignment = 1
+
+[node name="IDLabel" type="Label" parent="DetailPanel/DetailBox/VBox" unique_id=1574896555]
+layout_mode = 2
+
+[node name="ResultLabel" type="Label" parent="DetailPanel/DetailBox/VBox" unique_id=2018495943]
+layout_mode = 2
+
+[node name="DateLabel" type="Label" parent="DetailPanel/DetailBox/VBox" unique_id=437397251]
+layout_mode = 2
+
+[node name="Sep1" type="HSeparator" parent="DetailPanel/DetailBox/VBox" unique_id=1971452602]
+layout_mode = 2
+
+[node name="LevelLabel" type="Label" parent="DetailPanel/DetailBox/VBox" unique_id=1688062251]
+layout_mode = 2
+
+[node name="KillsLabel" type="Label" parent="DetailPanel/DetailBox/VBox" unique_id=852856648]
+layout_mode = 2
+
+[node name="TimeLabel" type="Label" parent="DetailPanel/DetailBox/VBox" unique_id=860411918]
+layout_mode = 2
+
+[node name="DamageLabel" type="Label" parent="DetailPanel/DetailBox/VBox" unique_id=285950977]
+layout_mode = 2
+
+[node name="ScoreLabel" type="Label" parent="DetailPanel/DetailBox/VBox" unique_id=1602846001]
+layout_mode = 2
+
+[node name="Sep2" type="HSeparator" parent="DetailPanel/DetailBox/VBox" unique_id=1952183035]
+layout_mode = 2
+
+[node name="RewardsLabel" type="Label" parent="DetailPanel/DetailBox/VBox" unique_id=411689899]
+layout_mode = 2
+autowrap_mode = 2
+
+[node name="CloseButton" type="Button" parent="DetailPanel/DetailBox/VBox" unique_id=1046562778]
+custom_minimum_size = Vector2(200, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "关闭"
