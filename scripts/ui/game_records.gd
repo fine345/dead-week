@@ -190,11 +190,25 @@ func _show_detail(record: Dictionary) -> void:
 	score_label.text = "总分：%d" % record.get("score", 0)
 	var rewards: Array = record.get("rewards", [])
 	if rewards.size() > 0:
-		rewards_label.text = "奖励：" + "、".join(rewards)
-		rewards_label.add_theme_font_size_override("font_size", 24)
+		rewards_label.text = "奖励："
+		rewards_label.add_theme_font_size_override("font_size", 20)
 		rewards_label.visible = true
+		var rewards_grid: GridContainer = $DetailPanel/DetailBox/VBox/RewardsGrid
+		if rewards_grid != null:
+			for child in rewards_grid.get_children():
+				child.queue_free()
+			rewards_grid.columns = 2 if rewards.size() > 1 else 1
+			for reward in rewards:
+				var lbl := Label.new()
+				lbl.text = str(reward)
+				lbl.add_theme_font_size_override("font_size", 20)
+				rewards_grid.add_child(lbl)
+			rewards_grid.visible = true
 	else:
 		rewards_label.visible = false
+		var rewards_grid: GridContainer = $DetailPanel/DetailBox/VBox/RewardsGrid
+		if rewards_grid != null:
+			rewards_grid.visible = false
 	detail_panel.visible = true
 
 func _close_detail() -> void:

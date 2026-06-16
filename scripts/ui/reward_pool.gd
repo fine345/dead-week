@@ -126,7 +126,7 @@ const WEAPON_RULER := [
 	},
 	{
 		"id": "ruler_radius",
-		"title": "旋转尺子 半径+25% 尺子+25%",
+		"title": "尺子半径与旋转半径+25%",
 		"type": "weapon_upgrade",
 		"weapon": "ruler",
 		"requires": "ruler",
