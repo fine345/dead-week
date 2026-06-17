@@ -1,26 +1,13 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://b5bcf3pyraod4"]
 
-[ext_resource type="Script" path="res://scripts/game/enemy_type4.gd" id="1_e4"]
+[ext_resource type="Script" uid="uid://ca17hi4lsja0a" path="res://scripts/game/enemy_type4.gd" id="1_e4"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_e4"]
-size = Vector2(28, 30)
+[sub_resource type="CircleShape2D" id="CircleShape2D_e4"]
+radius = 15.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e4"]
-bg_color = Color(0.2, 0.7, 0.3, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_right = 6
-corner_radius_bottom_left = 6
-
-[node name="EnemyType4" type="CharacterBody2D" groups=["enemy"]]
+[node name="EnemyType4" type="CharacterBody2D" unique_id=1291187464 groups=["enemy"]]
+texture_filter = 1
 script = ExtResource("1_e4")
 
-[node name="Visual" type="Panel" parent="."]
-offset_left = -14.0
-offset_top = -15.0
-offset_right = 14.0
-offset_bottom = 15.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_e4")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("RectangleShape2D_e4")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=976855069]
+shape = SubResource("CircleShape2D_e4")

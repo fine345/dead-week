@@ -7,10 +7,8 @@ func _ready() -> void:
 	super._ready()
 
 func _apply_visual() -> void:
-	var visual: Panel = $Visual
-	if visual == null:
-		return
-	var style: StyleBoxFlat = visual.get_theme_stylebox("panel") as StyleBoxFlat
-	if style == null:
-		return
-	style.bg_color = Color(0.95, 0.55, 0.2, 1.0)
+	_setup_animations(
+		"res://assets/sprites/enemies/enemy_2_idle-Sheet.png",
+		"res://assets/sprites/enemies/enemy_2_walk-Sheet.png",
+		"res://assets/sprites/enemies/enemy_124_hurt-Sheet.png"
+	)

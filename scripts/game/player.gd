@@ -59,7 +59,9 @@ var _animated_sprite: AnimatedSprite2D
 var _facing_right := true
 var _pre_dash_visual := "idle"
 var _hurt_timer := 0.0
+var _darken_timer := 0.0
 const HURT_DISPLAY_TIME := 0.2
+const DARKEN_DURATION := 0.8
 
 func _ready() -> void:
 	health = max_health
@@ -125,7 +127,7 @@ func _activate_camera() -> void:
 	var camera: Camera2D = $Camera2D
 	if camera != null:
 		camera.enabled = true
-		camera.position = Vector2(0, 0)
+		camera.position = Vector2(0, 100)
 		camera.make_current()
 
 func _update_visuals() -> void:
@@ -341,6 +343,7 @@ func take_damage(amount: int) -> void:
 	if _animated_sprite != null:
 		_animated_sprite.play("hurt")
 	_hurt_timer = HURT_DISPLAY_TIME
+	_darken_timer = 0.0
 	_apply_damage_knockback()
 	if health <= 0:
 		is_dead = true
@@ -431,6 +434,15 @@ func _process(delta: float) -> void:
 			modulate = Color(1.0, 1.0, 1.0, 1.0)
 	if _hurt_timer > 0.0:
 		_hurt_timer = maxf(_hurt_timer - delta, 0.0)
+		if _hurt_timer <= 0.0:
+			_darken_timer = DARKEN_DURATION
+	if _darken_timer > 0.0:
+		_darken_timer = maxf(_darken_timer - delta, 0.0)
+		if not is_dead and _animated_sprite != null:
+			_animated_sprite.modulate = Color(0.5, 0.5, 0.5, 1.0)
+		if _darken_timer <= 0.0:
+			if _animated_sprite != null:
+				_animated_sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
 	if get_tree() != null and get_tree().paused:
 		return
 	if attack_cooldown > 0.0:

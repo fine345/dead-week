@@ -27,6 +27,11 @@ var knockback_distance_left := 0.0
 var knockback_return_speed := 0.0
 var stored_move_speed := 200.0
 
+var _animated_sprite: AnimatedSprite2D = null
+var _hurt_timer := 0.0
+var _hurt_flip := false
+const HURT_DISPLAY_TIME := 0.05
+
 const DAMAGE_NUMBER_SCENE := preload("res://scenes/ui/damage_number.tscn")
 
 func _ready() -> void:
@@ -36,6 +41,45 @@ func _ready() -> void:
 
 func _apply_visual() -> void:
 	pass
+
+func _setup_animations(idle_path: String, walk_path: String, hurt_path: String, walk_fps: float = 5.0, hurt_fps: float = 10.0, extra_anims: Dictionary = {}) -> void:
+	_animated_sprite = AnimatedSprite2D.new()
+	_animated_sprite.z_index = 5
+	_animated_sprite.texture_filter = 0
+	var sf := SpriteFrames.new()
+	sf.add_animation("idle")
+	sf.set_animation_loop("idle", true)
+	sf.set_animation_speed("idle", 1.0)
+	sf.add_frame("idle", load(idle_path))
+	sf.add_animation("walk")
+	sf.set_animation_loop("walk", true)
+	sf.set_animation_speed("walk", walk_fps)
+	var walk_tex = load(walk_path)
+	var atlas = AtlasTexture.new()
+	atlas.atlas = walk_tex
+	for i in range(6):
+		atlas.region = Rect2(i * 15, 0, 15, 15)
+		sf.add_frame("walk", atlas.duplicate())
+	sf.add_animation("hurt")
+	sf.set_animation_loop("hurt", false)
+	sf.set_animation_speed("hurt", hurt_fps)
+	sf.add_frame("hurt", load(hurt_path))
+	for anim_name in extra_anims:
+		var anim_data: Dictionary = extra_anims[anim_name]
+		sf.add_animation(anim_name)
+		sf.set_animation_loop(anim_name, false)
+		sf.set_animation_speed(anim_name, anim_data.get("fps", 10.0))
+		var tex = load(anim_data["path"])
+		var frame_count: int = anim_data.get("frames", 5)
+		var frame_atlas = AtlasTexture.new()
+		frame_atlas.atlas = tex
+		for i in range(frame_count):
+			frame_atlas.region = Rect2(i * 15, 0, 15, 15)
+			sf.add_frame(anim_name, frame_atlas.duplicate())
+	_animated_sprite.sprite_frames = sf
+	_animated_sprite.scale = Vector2(2.0, 2.0)
+	_animated_sprite.play("idle")
+	add_child(_animated_sprite)
 
 func apply_freeze(duration: float) -> void:
 	freeze_timer = maxf(freeze_timer, duration)
@@ -91,11 +135,16 @@ func set_game(game_ref: Node) -> void:
 func set_target(target_node: Node2D) -> void:
 	target = target_node
 
-func take_damage(amount: int, color: Color = Color.WHITE) -> void:
+func take_damage(amount: int, color: Color = Color.WHITE, source_pos: Vector2 = Vector2.INF) -> void:
 	if is_dead:
 		return
 	health = max(health - amount, 0)
 	_spawn_damage_number(amount, color)
+	if _animated_sprite != null and health > 0:
+		_animated_sprite.play("hurt")
+		_hurt_timer = HURT_DISPLAY_TIME
+		_hurt_flip = source_pos != Vector2.INF and source_pos.x > global_position.x
+		_animated_sprite.flip_h = _hurt_flip
 	if health <= 0:
 		_die()
 
@@ -124,6 +173,16 @@ func _physics_process(delta: float) -> void:
 			burn_effect_instance.queue_free()
 			burn_effect_instance = null
 		return
+
+	if _hurt_timer > 0.0:
+		_hurt_timer = maxf(_hurt_timer - delta, 0.0)
+	elif _animated_sprite != null:
+		if velocity != Vector2.ZERO:
+			if _animated_sprite.animation != "walk":
+				_animated_sprite.play("walk")
+		else:
+			if _animated_sprite.animation != "idle":
+				_animated_sprite.play("idle")
 
 	if freeze_timer > 0.0:
 		freeze_timer = maxf(freeze_timer - delta, 0.0)

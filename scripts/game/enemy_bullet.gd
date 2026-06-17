@@ -16,6 +16,15 @@ func _ready() -> void:
 			initial_direction = Vector2.RIGHT
 	current_velocity = initial_direction * move_speed
 	rotation = current_velocity.angle()
+	if has_meta("use_sprite") and get_meta("use_sprite"):
+		var vis = get_node_or_null("Visual")
+		if vis != null:
+			vis.queue_free()
+		var sprite := Sprite2D.new()
+		sprite.texture = load("res://assets/sprites/enemies/enemy_3_bullet_95-Sheet.png")
+		sprite.scale = Vector2(2.0, 2.0)
+		sprite.z_index = 5
+		add_child(sprite)
 
 func _physics_process(delta: float) -> void:
 	travel_distance += current_velocity.length() * delta

@@ -42,7 +42,7 @@ func _show_fixed() -> void:
 	base.visible = true
 	base.size = Vector2(radius * 2.0, radius * 2.0)
 	var vp_size := get_viewport_rect().size
-	position = Vector2((vp_size.x - base.size.x) / 2.0, vp_size.y - 300.0 - base.size.y)
+	position = Vector2((vp_size.x - base.size.x) / 2.0, vp_size.y - 200.0 - base.size.y)
 	base.position = Vector2.ZERO
 	base_center = Vector2(radius, radius)
 	knob.position = base_center - knob.size * 0.5

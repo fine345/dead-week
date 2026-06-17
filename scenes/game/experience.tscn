@@ -1,26 +1,19 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://jabt537bhoem"]
 
-[ext_resource type="Script" path="res://scripts/game/experience.gd" id="1_exp"]
+[ext_resource type="Script" uid="uid://cpppwv6ghuk1k" path="res://scripts/game/experience.gd" id="1_exp"]
+[ext_resource type="Texture2D" uid="uid://b0gbuetmcg60u" path="res://assets/sprites/exp-Sheet.png" id="2_exp_tex"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_exp"]
-size = Vector2(18, 18)
+[sub_resource type="CircleShape2D" id="CircleShape2D_exp"]
+radius = 9.0
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_exp"]
-bg_color = Color(0.2, 1, 0.4, 1)
-corner_radius_top_left = 2
-corner_radius_top_right = 2
-corner_radius_bottom_right = 2
-corner_radius_bottom_left = 2
-
-[node name="Experience" type="Area2D"]
+[node name="Experience" type="Area2D" unique_id=1261785776]
+texture_filter = 1
 script = ExtResource("1_exp")
 
-[node name="Visual" type="Panel" parent="."]
-offset_left = -9.0
-offset_top = -9.0
-offset_right = 9.0
-offset_bottom = 9.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_exp")
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1040312820]
+z_index = 1
+scale = Vector2(2, 2)
+texture = ExtResource("2_exp_tex")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("RectangleShape2D_exp")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1546979724]
+shape = SubResource("CircleShape2D_exp")

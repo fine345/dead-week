@@ -166,11 +166,13 @@ func _process_cooldown(delta: float) -> void:
 func _switch_to_skill_shape() -> void:
 	if collision_node != null:
 		collision_node.shape = dash_shape
+		collision_node.rotation = locked_direction.angle()
 	if visual_node != null:
 		visual_node.offset_left = dash_visual_offset.position.x
 		visual_node.offset_top = dash_visual_offset.position.y
 		visual_node.offset_right = dash_visual_offset.end.x
 		visual_node.offset_bottom = dash_visual_offset.end.y
+		visual_node.rotation = locked_direction.angle()
 		var style: StyleBoxFlat = visual_node.get_theme_stylebox("panel") as StyleBoxFlat
 		if style != null:
 			style.corner_radius_top_left = 12
@@ -181,11 +183,13 @@ func _switch_to_skill_shape() -> void:
 func _switch_to_normal_shape() -> void:
 	if collision_node != null:
 		collision_node.shape = normal_shape
+		collision_node.rotation = 0.0
 	if visual_node != null:
 		visual_node.offset_left = normal_visual_offset.position.x
 		visual_node.offset_top = normal_visual_offset.position.y
 		visual_node.offset_right = normal_visual_offset.end.x
 		visual_node.offset_bottom = normal_visual_offset.end.y
+		visual_node.rotation = 0.0
 		var style: StyleBoxFlat = visual_node.get_theme_stylebox("panel") as StyleBoxFlat
 		if style != null:
 			style.corner_radius_top_left = 12
@@ -223,8 +227,8 @@ func _show_charge_indicator() -> void:
 func _update_charge_indicator() -> void:
 	if charge_indicator == null:
 		return
-	var indicator_length := 300.0
-	var indicator_width := 40.0
+	var indicator_length := 400.0
+	var indicator_width := 64.0
 	charge_indicator.size = Vector2(indicator_width, indicator_length)
 	charge_indicator.pivot_offset = Vector2(indicator_width / 2, indicator_length)
 	charge_indicator.rotation = locked_direction.angle() + PI / 2

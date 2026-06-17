@@ -1,19 +1,18 @@
 [gd_scene format=3 uid="uid://d2w1c2dijcx51"]
 
 [ext_resource type="Script" uid="uid://cgjk7n2gmngmt" path="res://scripts/game/boss_reward.gd" id="1_l8o3w"]
+[ext_resource type="Texture2D" uid="uid://h2ep4rdyrt8j" path="res://assets/sprites/exp_BOSS-Sheet.png" id="2_boss_tex"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_l8o3w"]
-radius = 9.0
 
 [node name="BossReward" type="Area2D" unique_id=5686968]
+texture_filter = 1
 script = ExtResource("1_l8o3w")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=87493548]
 shape = SubResource("CircleShape2D_l8o3w")
 
-[node name="Visual" type="ColorRect" parent="." unique_id=2134008520]
-offset_left = -9.0
-offset_top = -9.0
-offset_right = 9.0
-offset_bottom = 9.0
-color = Color(1, 0.84, 0, 1)
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=602144162]
+z_index = 5
+scale = Vector2(2, 2)
+texture = ExtResource("2_boss_tex")
