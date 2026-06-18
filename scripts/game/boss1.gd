@@ -7,12 +7,10 @@ var state_timer := 0.0
 var dash_direction := Vector2.ZERO
 var locked_direction := Vector2.ZERO
 var charge_indicator: ColorRect = null
-var normal_shape: RectangleShape2D
-var dash_shape: RectangleShape2D
+var normal_shape: Shape2D
+var dash_shape: Shape2D
 var collision_node: CollisionShape2D
-var visual_node: Panel
-var dash_visual_offset := Rect2(-32, -48, 64, 96)
-var normal_visual_offset := Rect2(-32, -32, 64, 64)
+var _anim_timer := 0.0
 
 const CHASE_SPEED := 400.0
 const CHARGE_RANGE := 200.0
@@ -23,6 +21,8 @@ const IDLE_DURATION := 0.2
 const COOLDOWN_DURATION := 2.0
 const PUSH_RADIUS := 50.0
 const PUSH_FORCE := 80.0
+const READY_DURATION := 0.6
+const DONE_DURATION := 0.6
 
 func _ready() -> void:
 	max_health = 2000
@@ -30,23 +30,70 @@ func _ready() -> void:
 	experience_drop = 0
 	touch_damage = 1
 	touch_range = 26.67
-	super._ready()
+	_setup_boss_animations()
 	_setup_collision_shapes()
 	_setup_charge_indicator()
+	super._ready()
+
+func _setup_boss_animations() -> void:
+	_animated_sprite = AnimatedSprite2D.new()
+	_animated_sprite.z_index = 5
+	_animated_sprite.texture_filter = 0
+	_animated_sprite.scale = Vector2(2.0, 2.0)
+	var sf := SpriteFrames.new()
+	sf.add_animation("idle")
+	sf.set_animation_loop("idle", true)
+	sf.set_animation_speed("idle", 1.0)
+	sf.add_frame("idle", load("res://assets/sprites/bosses/stapler_32x32_idle-Sheet.png"))
+	sf.add_animation("walk")
+	sf.set_animation_loop("walk", true)
+	sf.set_animation_speed("walk", 5.0)
+	var walk_tex = load("res://assets/sprites/bosses/stapler_32x32_walk-Sheet.png")
+	var atlas := AtlasTexture.new()
+	atlas.atlas = walk_tex
+	for i in range(4):
+		atlas.region = Rect2(i * 32, 0, 32, 32)
+		sf.add_frame("walk", atlas.duplicate())
+	sf.add_animation("ready")
+	sf.set_animation_loop("ready", false)
+	sf.set_animation_speed("ready", 5.0)
+	var ready_tex = load("res://assets/sprites/bosses/stapler_32x32_ready-Sheet.png")
+	var ready_atlas := AtlasTexture.new()
+	ready_atlas.atlas = ready_tex
+	for i in range(3):
+		ready_atlas.region = Rect2(i * 32, 0, 32, 48)
+		sf.add_frame("ready", ready_atlas.duplicate())
+	sf.add_animation("dash")
+	sf.set_animation_loop("dash", false)
+	sf.set_animation_speed("dash", 1.0)
+	sf.add_frame("dash", load("res://assets/sprites/bosses/stapler_32x32_dash-Sheet.png"))
+	sf.add_animation("done")
+	sf.set_animation_loop("done", false)
+	sf.set_animation_speed("done", 5.0)
+	var done_tex = load("res://assets/sprites/bosses/stapler_32x32_done-Sheet.png")
+	var done_atlas := AtlasTexture.new()
+	done_atlas.atlas = done_tex
+	for i in range(3):
+		done_atlas.region = Rect2(i * 32, 0, 32, 48)
+		sf.add_frame("done", done_atlas.duplicate())
+	_animated_sprite.sprite_frames = sf
+	_animated_sprite.play("idle")
+	add_child(_animated_sprite)
 
 func _setup_collision_shapes() -> void:
 	collision_node = $CollisionShape2D
-	normal_shape = RectangleShape2D.new()
-	normal_shape.size = Vector2(64, 64)
-	dash_shape = RectangleShape2D.new()
-	dash_shape.size = Vector2(64, 96)
+	normal_shape = CircleShape2D.new()
+	normal_shape.radius = 16.0
+	dash_shape = CapsuleShape2D.new()
+	dash_shape.radius = 16.0
+	dash_shape.height = 48.0
 	if collision_node != null:
 		collision_node.shape = normal_shape
 
 func _setup_charge_indicator() -> void:
 	charge_indicator = ColorRect.new()
 	charge_indicator.color = Color(1, 0, 0, 0.3)
-	charge_indicator.size = Vector2(80, 266.67)
+	charge_indicator.size = Vector2(64, 400)
 	charge_indicator.visible = false
 	add_child(charge_indicator)
 
@@ -60,17 +107,7 @@ func apply_knockback(_from_position: Vector2, _force: float) -> void:
 	pass
 
 func _apply_visual() -> void:
-	visual_node = $Visual
-	if visual_node == null:
-		return
-	var style: StyleBoxFlat = visual_node.get_theme_stylebox("panel") as StyleBoxFlat
-	if style == null:
-		return
-	style.bg_color = Color(0.6, 0.2, 0.8, 1.0)
-	style.corner_radius_top_left = 12
-	style.corner_radius_top_right = 12
-	style.corner_radius_bottom_right = 12
-	style.corner_radius_bottom_left = 12
+	pass
 
 func _physics_process(delta: float) -> void:
 	if is_dead:
@@ -100,26 +137,35 @@ func _process_chase(delta: float) -> void:
 	move_speed = CHASE_SPEED
 	if target == null or not is_instance_valid(target):
 		velocity = Vector2.ZERO
+		_play_move_anim()
 		return
 	var direction := global_position.direction_to(target.global_position)
 	velocity = direction * move_speed
+	_play_move_anim()
 	if global_position.distance_to(target.global_position) <= CHARGE_RANGE:
 		_enter_charge_state()
 
 func _enter_charge_state() -> void:
 	current_state = BossState.CHARGE
 	state_timer = CHARGE_DURATION
+	_anim_timer = READY_DURATION
 	velocity = Vector2.ZERO
 	move_speed = 0.0
 	if target != null and is_instance_valid(target):
 		locked_direction = global_position.direction_to(target.global_position)
 	_switch_to_skill_shape()
 	_show_charge_indicator()
+	if _animated_sprite != null:
+		_animated_sprite.play("ready")
 
 func _process_charge(delta: float) -> void:
 	state_timer -= delta
+	_anim_timer -= delta
 	if charge_indicator != null:
 		_update_charge_indicator()
+	if _anim_timer <= 0.0 and current_state == BossState.CHARGE:
+		if _animated_sprite != null:
+			_animated_sprite.play("dash")
 	if state_timer <= 0.0:
 		_enter_dash_state()
 
@@ -130,6 +176,8 @@ func _enter_dash_state() -> void:
 	velocity = dash_direction * DASH_SPEED
 	move_speed = DASH_SPEED
 	_hide_charge_indicator()
+	if _animated_sprite != null:
+		_animated_sprite.play("dash")
 
 func _process_dash(delta: float) -> void:
 	state_timer -= delta
@@ -139,63 +187,70 @@ func _process_dash(delta: float) -> void:
 func _enter_idle_state() -> void:
 	current_state = BossState.IDLE
 	state_timer = IDLE_DURATION
+	_anim_timer = DONE_DURATION
 	velocity = Vector2.ZERO
 	move_speed = 0.0
-	_switch_to_normal_shape()
+	if _animated_sprite != null:
+		_animated_sprite.play("done")
 
 func _process_idle(delta: float) -> void:
 	state_timer -= delta
+	_anim_timer -= delta
+	if _anim_timer <= 0.0 and current_state == BossState.IDLE:
+		_switch_to_normal_shape()
 	if state_timer <= 0.0:
 		_enter_cooldown_state()
 
 func _enter_cooldown_state() -> void:
 	current_state = BossState.COOLDOWN
 	state_timer = COOLDOWN_DURATION
+	_switch_to_normal_shape()
 
 func _process_cooldown(delta: float) -> void:
 	state_timer -= delta
 	move_speed = 200.0
 	if target == null or not is_instance_valid(target):
 		velocity = Vector2.ZERO
+		_play_move_anim()
 		return
 	var direction := global_position.direction_to(target.global_position)
 	velocity = direction * move_speed
+	_play_move_anim()
 	if state_timer <= 0.0:
 		current_state = BossState.CHASE
 
+func _play_move_anim() -> void:
+	if _animated_sprite == null:
+		return
+	if velocity != Vector2.ZERO:
+		if _animated_sprite.animation != "walk":
+			_animated_sprite.play("walk")
+		_animated_sprite.flip_h = velocity.x < 0.0
+		_animated_sprite.rotation = 0.0
+	else:
+		if _animated_sprite.animation != "idle":
+			_animated_sprite.play("idle")
+		if target != null and is_instance_valid(target):
+			_animated_sprite.flip_h = target.global_position.x < global_position.x
+		_animated_sprite.rotation = 0.0
+
 func _switch_to_skill_shape() -> void:
+	var angle: float = locked_direction.angle()
+	if locked_direction.x < 0.0:
+		angle += PI
 	if collision_node != null:
 		collision_node.shape = dash_shape
-		collision_node.rotation = locked_direction.angle()
-	if visual_node != null:
-		visual_node.offset_left = dash_visual_offset.position.x
-		visual_node.offset_top = dash_visual_offset.position.y
-		visual_node.offset_right = dash_visual_offset.end.x
-		visual_node.offset_bottom = dash_visual_offset.end.y
-		visual_node.rotation = locked_direction.angle()
-		var style: StyleBoxFlat = visual_node.get_theme_stylebox("panel") as StyleBoxFlat
-		if style != null:
-			style.corner_radius_top_left = 12
-			style.corner_radius_top_right = 12
-			style.corner_radius_bottom_right = 12
-			style.corner_radius_bottom_left = 12
+		collision_node.rotation = angle
+	if _animated_sprite != null:
+		_animated_sprite.rotation = angle
+		_animated_sprite.flip_h = locked_direction.x < 0.0
 
 func _switch_to_normal_shape() -> void:
 	if collision_node != null:
 		collision_node.shape = normal_shape
 		collision_node.rotation = 0.0
-	if visual_node != null:
-		visual_node.offset_left = normal_visual_offset.position.x
-		visual_node.offset_top = normal_visual_offset.position.y
-		visual_node.offset_right = normal_visual_offset.end.x
-		visual_node.offset_bottom = normal_visual_offset.end.y
-		visual_node.rotation = 0.0
-		var style: StyleBoxFlat = visual_node.get_theme_stylebox("panel") as StyleBoxFlat
-		if style != null:
-			style.corner_radius_top_left = 12
-			style.corner_radius_top_right = 12
-			style.corner_radius_bottom_right = 12
-			style.corner_radius_bottom_left = 12
+	if _animated_sprite != null:
+		_animated_sprite.rotation = 0.0
 
 func _push_nearby_enemies() -> void:
 	var game_node := get_tree().current_scene
