@@ -37,6 +37,7 @@ offset_bottom = 980.0
 
 [node name="GridBackground" type="Node2D" parent="." unique_id=616289855]
 z_index = -100
+texture_filter = 1
 position = Vector2(-720, -1440)
 script = ExtResource("4_uaf1y")
 

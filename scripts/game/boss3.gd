@@ -12,7 +12,7 @@ var state_timer := 0.0
 var locked_direction := Vector2.ZERO
 var lock_position := Vector2.ZERO
 var collision_node: CollisionShape2D
-var normal_shape: RectangleShape2D
+var normal_shape: Shape2D
 var _cap_sprite: AnimatedSprite2D
 var _tassel_sprite: AnimatedSprite2D
 var _tassel_pivot: Node2D
@@ -116,8 +116,9 @@ func _setup_boss_animations() -> void:
 
 func _setup_collision() -> void:
 	collision_node = $CollisionShape2D
-	normal_shape = RectangleShape2D.new()
-	normal_shape.size = Vector2(64, 64)
+	normal_shape = CapsuleShape2D.new()
+	normal_shape.radius = 13.0
+	normal_shape.height = 36.0
 	if collision_node != null:
 		collision_node.shape = normal_shape
 
