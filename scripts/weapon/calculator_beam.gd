@@ -21,7 +21,26 @@ func setup(p_damage: int, p_direction: Vector2, p_width: float, p_duration: floa
 	owner_player = p_player
 	rotation = direction.angle()
 	_tick_interval = 0.75
+	_setup_visual()
 	_update_collision_width()
+
+func _setup_visual() -> void:
+	var existing: Node = get_node_or_null("Visual")
+	if existing != null:
+		existing.queue_free()
+	var sprite := Sprite2D.new()
+	sprite.name = "Visual"
+	sprite.texture = load("res://assets/sprites/calcultor_laser-Sheet.png")
+	sprite.centered = false
+	var scale_x := beam_width / 8.0
+	var scale_y := beam_width / 8.0
+	sprite.scale = Vector2(scale_x, scale_y)
+	sprite.position = Vector2(0, -4.0 * scale_y)
+	sprite.z_index = 8
+	add_child(sprite)
+	var tween := create_tween()
+	tween.tween_property(sprite, "modulate:a", 0.0, beam_duration * 0.5).set_delay(beam_duration * 0.5)
+	tween.tween_callback(sprite.queue_free)
 
 func _physics_process(delta: float) -> void:
 	if get_tree().paused:
@@ -63,19 +82,3 @@ func _update_collision_width() -> void:
 		var shape: RectangleShape2D = collision.shape as RectangleShape2D
 		if shape != null:
 			shape.size = Vector2(1440, beam_width)
-	var visual: Label = $Visual
-	if visual != null:
-		var font_size: int = maxi(int(beam_width), 12)
-		var char_width: float = font_size * 0.6
-		var repeat_count: int = ceili(1440.0 / (char_width * 4.0))
-		visual.text = ""
-		for i in range(repeat_count):
-			visual.text += "0101"
-		visual.size = Vector2(1440, font_size)
-		visual.position = Vector2(0, -font_size / 2.0)
-		visual.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		visual.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		visual.add_theme_font_size_override("font_size", font_size)
-		var tween: Tween = create_tween()
-		tween.tween_property(visual, "modulate:a", 0.0, 0.5)
-		tween.tween_callback(visual.queue_free)

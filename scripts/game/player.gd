@@ -24,14 +24,17 @@ var ruler_collision_radius := 25.0
 var ruler_speed_multiplier := 1.0
 var _ruler_instances: Array[Node2D] = []
 
-var ai_laser_unlocked := false
+var calculator_unlocked := false
 var laser_width_multiplier := 1.0
 var laser_damage_multiplier := 1.0
 var laser_count := 1
 var _laser_cooldown := 0.0
+var _calculator: Node2D = null
+var _calculator_reward_count := 0
 
 const RULER_SCENE := preload("res://scenes/weapon/ruler.tscn")
-const AI_LASER_SCENE := preload("res://scenes/weapon/ai_laser.tscn")
+const CALCULATOR_BEAM_SCENE := preload("res://scenes/weapon/calculator_beam.tscn")
+const CALCULATOR_SCENE := preload("res://scenes/weapon/calculator.tscn")
 
 var health := 5
 var game: Node = null
@@ -275,17 +278,21 @@ func apply_reward_effect(reward_id: String) -> void:
 		"ruler_speed":
 			ruler_speed_multiplier += 0.5
 			_update_ruler_params()
-		"ai_laser_weapon":
-			ai_laser_unlocked = true
+		"calculator_weapon":
+			calculator_unlocked = true
 			laser_count = 1
-			laser_width_multiplier = 1.5
 			_laser_cooldown = 2.0
-		"laser_width":
-			laser_width_multiplier *= 2.0
+			_calculator_reward_count = 1
+			laser_width_multiplier = 15.0
+			_spawn_calculator()
 		"laser_damage":
 			laser_damage_multiplier += 0.5
+			_calculator_reward_count += 1
+			laser_width_multiplier = 15.0 + (_calculator_reward_count - 1) * 3.0
 		"laser_count":
-			laser_count += 1
+			laser_count = mini(laser_count + 1, 5)
+			_calculator_reward_count += 1
+			laser_width_multiplier = 15.0 + (_calculator_reward_count - 1) * 3.0
 		"attack_range":
 			attack_range *= 1.5
 		"bullet_speed":
@@ -449,10 +456,10 @@ func _process(delta: float) -> void:
 		attack_cooldown = maxf(attack_cooldown - delta, 0.0)
 	if attack_cooldown <= 0.0 and not is_leveling and not is_dashing:
 		_try_auto_attack()
-	if ai_laser_unlocked and not is_leveling and not is_dashing:
+	if calculator_unlocked and not is_leveling and not is_dashing:
 		_laser_cooldown = maxf(_laser_cooldown - delta, 0.0)
 		if _laser_cooldown <= 0.0:
-			_fire_ai_laser()
+			_fire_calculator_beam()
 			_laser_cooldown = 3.0
 
 func _physics_process(delta: float) -> void:
@@ -520,29 +527,46 @@ func cleanup_rulers() -> void:
 			r.queue_free()
 	_ruler_instances.clear()
 
-func _fire_ai_laser() -> void:
+func _spawn_calculator() -> void:
+	if _calculator != null and is_instance_valid(_calculator):
+		_calculator.queue_free()
+	_calculator = CALCULATOR_SCENE.instantiate()
+	_calculator.setup(self)
+	if game != null:
+		game.add_child(_calculator)
+	else:
+		add_child(_calculator)
+
+func _fire_calculator_beam() -> void:
 	if game == null:
 		return
+	if _calculator == null or not is_instance_valid(_calculator):
+		_spawn_calculator()
+	_calculator.start_fire()
+	var fire_pos: Vector2 = _calculator.get_fire_position()
 	var base_direction := Vector2.RIGHT
 	if game.has_method("get_nearest_enemy"):
-		var nearest: Node2D = game.get_nearest_enemy(global_position, 9999.0)
+		var nearest: Node2D = game.get_nearest_enemy(fire_pos, 9999.0)
 		if nearest != null:
-			base_direction = global_position.direction_to(nearest.global_position)
+			base_direction = fire_pos.direction_to(nearest.global_position)
 	var laser_damage: int = int(round(5 * laser_damage_multiplier))
 	var laser_duration: float = 0.75
-	var laser_width: float = 12.0 * laser_width_multiplier
+	var laser_width: float = laser_width_multiplier
 	for i in range(laser_count):
 		var angle_offset: float = 0.0
 		if i > 0:
 			var side: int = (i + 1) / 2
 			angle_offset = deg_to_rad(7.0) * side * (-1 if i % 2 == 1 else 1)
 		var dir: Vector2 = base_direction.rotated(angle_offset)
-		var laser: Area2D = AI_LASER_SCENE.instantiate() as Area2D
-		laser.global_position = global_position
+		var laser: Area2D = CALCULATOR_BEAM_SCENE.instantiate() as Area2D
+		laser.global_position = fire_pos
 		laser.setup(laser_damage, dir, laser_width, laser_duration, self)
 		if game != null:
 			game.add_child(laser)
 		else:
 			add_child(laser)
 		var timer := get_tree().create_timer(laser_duration)
-		timer.timeout.connect(func(): if is_instance_valid(laser): laser.queue_free())
+		timer.timeout.connect(func():
+			if is_instance_valid(laser): laser.queue_free()
+			if is_instance_valid(_calculator): _calculator.end_fire()
+		)

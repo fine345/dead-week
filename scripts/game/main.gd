@@ -620,7 +620,7 @@ func _restart_game() -> void:
 		boss_health_bar.hide_boss()
 	for child in get_children():
 		if child is Node2D and child != player and child != enemy_one_timer and child != level_up_panel and child != hud_virtual_joystick:
-			if child.name.begins_with("Bullet") or child.name.begins_with("Ruler") or child.name.begins_with("AILaser"):
+			if child.name.begins_with("Bullet") or child.name.begins_with("Ruler") or child.name.begins_with("CalculatorBeam"):
 				child.queue_free()
 	for laser in get_tree().get_nodes_in_group("boss_laser"):
 		if is_instance_valid(laser):
@@ -664,7 +664,7 @@ func _prepare_reward_offers() -> void:
 		player.shield_count if player != null else 0,
 		{
 			"ruler": player.ruler_weapon_unlocked if player != null else false,
-			"ai_laser": player.ai_laser_unlocked if player != null else false
+			"calculator": player.calculator_unlocked if player != null else false
 		}
 	)
 	pending_reward_options.clear()

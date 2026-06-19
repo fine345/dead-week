@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/weapon/calculator.gd" id="1_calc"]
+
+[node name="Calculator" type="Node2D"]
+script = ExtResource("1_calc")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+z_index = 10
+texture_filter = 0
