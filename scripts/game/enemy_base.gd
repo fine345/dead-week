@@ -89,8 +89,6 @@ func apply_freeze(duration: float) -> void:
 		get_parent().add_child(freeze_effect_instance)
 	if freeze_effect_instance.has_method("set_target"):
 		freeze_effect_instance.set_target(self)
-	if freeze_effect_instance.has_method("set_effect_color"):
-		freeze_effect_instance.set_effect_color(Color(0, 0, 0, 0.35))
 	if freeze_effect_instance.has_method("set_effect_size"):
 		freeze_effect_instance.set_effect_size(Vector2(30, 30))
 	if freeze_effect_instance.has_method("set_effect_lifetime"):
@@ -109,8 +107,6 @@ func apply_burn(_duration: float, _damage_per_tick: int = 1) -> void:
 		get_parent().add_child(burn_effect_instance)
 	if burn_effect_instance.has_method("set_target"):
 		burn_effect_instance.set_target(self)
-	if burn_effect_instance.has_method("set_effect_color"):
-		burn_effect_instance.set_effect_color(Color(1, 0, 0, 0.45))
 	if burn_effect_instance.has_method("set_effect_size"):
 		burn_effect_instance.set_effect_size(Vector2(30, 30))
 	if burn_effect_instance.has_method("set_effect_lifetime"):

@@ -1,10 +1,10 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dkwk32aj2feat"]
 
-[ext_resource type="Script" path="res://scripts/weapon/calculator.gd" id="1_calc"]
+[ext_resource type="Script" uid="uid://8kgmft2ovvc8" path="res://scripts/weapon/calculator.gd" id="1_calc"]
 
-[node name="Calculator" type="Node2D"]
+[node name="Calculator" type="Node2D" unique_id=557326914]
+texture_filter = 1
 script = ExtResource("1_calc")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=949310543]
 z_index = 10
-texture_filter = 0

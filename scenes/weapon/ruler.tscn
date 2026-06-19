@@ -1,19 +1,15 @@
-[gd_scene format=3 uid="uid://d3towke6ycepn"]
+[gd_scene format=3 uid="uid://dn2lsqbkxbwed"]
 
-[ext_resource type="Script" path="res://scripts/weapon/ruler.gd" id="1_m1ppu"]
+[ext_resource type="Script" uid="uid://c4vied0qv8oks" path="res://scripts/weapon/ruler.gd" id="1_ruler"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_xbvac"]
-size = Vector2(20, 6)
+[sub_resource type="CircleShape2D" id="CircleShape2D_ruler"]
+radius = 13.0
 
-[node name="Ruler" type="Area2D" unique_id=70022819]
-script = ExtResource("1_m1ppu")
+[node name="Ruler" type="Area2D" unique_id=374520421]
+texture_filter = 1
+script = ExtResource("1_ruler")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=263903193]
-shape = SubResource("RectangleShape2D_xbvac")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1356999007]
+shape = SubResource("CircleShape2D_ruler")
 
-[node name="Visual" type="ColorRect" parent="." unique_id=252680949]
-offset_left = -10.0
-offset_top = -3.0
-offset_right = 10.0
-offset_bottom = 3.0
-color = Color(0.3, 0.7, 0.3, 1)
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=724569458]

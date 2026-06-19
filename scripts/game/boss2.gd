@@ -47,7 +47,7 @@ func _setup_boss_animations() -> void:
 	var iw_tex := load("res://assets/sprites/bosses/alarm_idle_walk-Sheet.png")
 	var atlas := AtlasTexture.new()
 	atlas.atlas = iw_tex
-	for i in range(15):
+	for i in range(16):
 		atlas.region = Rect2(i * 32, 0, 32, 32)
 		sf.add_frame("idle_walk", atlas.duplicate())
 	sf.add_animation("skill")

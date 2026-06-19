@@ -11,13 +11,12 @@ var sprite: Sprite2D
 
 func _ready() -> void:
 	time_left = maxf(lifetime, 0.0)
-	sprite = Sprite2D.new()
-	sprite.texture = preload("res://assets/generated/effect_box_white.png")
-	sprite.centered = true
-	sprite.modulate = effect_color
-	sprite.scale = effect_size / 32.0
-	sprite.z_index = 100
-	add_child(sprite)
+	sprite = get_node_or_null("Visual") as Sprite2D
+	if sprite == null:
+		sprite = Sprite2D.new()
+		sprite.centered = true
+		sprite.z_index = 100
+		add_child(sprite)
 	_update_visual()
 
 func set_target(target_node: Node2D) -> void:
@@ -39,8 +38,7 @@ func set_effect_color(new_color: Color) -> void:
 
 func _update_visual() -> void:
 	if sprite != null:
-		sprite.modulate = effect_color
-		sprite.scale = effect_size / 32.0
+		sprite.scale = Vector2(2.0, 2.0)
 
 func _process(delta: float) -> void:
 	time_left -= delta

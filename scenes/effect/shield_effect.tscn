@@ -1,11 +1,12 @@
 [gd_scene format=3 uid="uid://cnxhgy25fadh0"]
 
-[ext_resource type="Script" path="res://scripts/effect/status_effect.gd" id="1_f3f37"]
+[ext_resource type="Script" uid="uid://chrar52dgk06m" path="res://scripts/effect/status_effect.gd" id="1_shield"]
+[ext_resource type="Texture2D" uid="uid://c688lwnhyeeoq" path="res://assets/sprites/effect_shield-Sheet.png" id="2_shield_tex"]
 
-[node name="ShieldEffect" type="Node2D" unique_id=2003303844]
-script = ExtResource("1_f3f37")
+[node name="ShieldEffect" type="Node2D" unique_id=786961148]
+texture_filter = 1
+script = ExtResource("1_shield")
 
-[node name="Visual" type="Sprite2D" parent="." unique_id=859452877]
-modulate = Color(0.2, 0.45, 1, 0.45)
+[node name="Visual" type="Sprite2D" parent="." unique_id=1362701687]
 z_index = 100
-scale = Vector2(1.5, 1.5)
+texture = ExtResource("2_shield_tex")

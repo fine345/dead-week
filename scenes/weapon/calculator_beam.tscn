@@ -1,12 +1,13 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://dc2x5wvxx6kva"]
 
-[ext_resource type="Script" path="res://scripts/weapon/calculator_beam.gd" id="1_beam"]
+[ext_resource type="Script" uid="uid://ku35y230mj4l" path="res://scripts/weapon/calculator_beam.gd" id="1_beam"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_beam"]
 size = Vector2(1440, 8)
 
-[node name="CalculatorBeam" type="Area2D"]
+[node name="CalculatorBeam" type="Area2D" unique_id=509426503]
+texture_filter = 1
 script = ExtResource("1_beam")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1751523021]
 shape = SubResource("RectangleShape2D_beam")

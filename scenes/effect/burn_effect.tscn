@@ -1,26 +1,12 @@
 [gd_scene format=3 uid="uid://dfosteiemvayb"]
 
-[ext_resource type="Script" path="res://scripts/effect/status_effect.gd" id="2_5m7ek"]
-[ext_resource type="Texture2D" uid="uid://o5o6lrplba46" path="res://assets/generated/effect_box_white.png" id="2_6ib0g"]
+[ext_resource type="Script" uid="uid://chrar52dgk06m" path="res://scripts/effect/status_effect.gd" id="1_burn"]
+[ext_resource type="Texture2D" uid="uid://8eykvxyg3sdh" path="res://assets/sprites/effect_burn-Sheet.png" id="2_burn_tex"]
 
-[node name="BurnEffect" type="Node2D" unique_id=1566307721]
-script = ExtResource("2_5m7ek")
+[node name="BurnEffect" type="Node2D" unique_id=944879490]
+texture_filter = 1
+script = ExtResource("1_burn")
 
-[node name="Visual" type="ColorRect" parent="." unique_id=543391104]
-offset_left = -18.67
-offset_top = -18.67
-offset_right = 18.67
-offset_bottom = 18.67
-mouse_filter = 2
-color = Color(1, 0, 0, 0.45)
-
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1961303592]
-z_index = 10
-scale = Vector2(1.167, 1.167)
-
-[node name="Visual2" type="Sprite2D" parent="." unique_id=2021293249]
-modulate = Color(1, 0, 0, 0.45)
+[node name="Visual" type="Sprite2D" parent="." unique_id=89506137]
 z_index = 100
-scale = Vector2(1.25, 1.25)
-texture = ExtResource("2_6ib0g")
-script = ExtResource("2_5m7ek")
+texture = ExtResource("2_burn_tex")

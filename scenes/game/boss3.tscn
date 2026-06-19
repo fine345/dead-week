@@ -6,6 +6,7 @@
 size = Vector2(64, 64)
 
 [node name="Boss3" type="CharacterBody2D" unique_id=604100208 groups=["boss", "boss3", "enemy"]]
+texture_filter = 1
 script = ExtResource("1_b3")
 
 [node name="Cap" type="AnimatedSprite2D" parent="." unique_id=1959830482]

@@ -305,8 +305,6 @@ func apply_reward_effect(reward_id: String) -> void:
 				add_child(shield_effect_instance)
 			if shield_effect_instance.has_method("set_target"):
 				shield_effect_instance.set_target(self)
-			if shield_effect_instance.has_method("set_effect_color"):
-				shield_effect_instance.set_effect_color(Color(0.2, 0.45, 1.0, 0.45))
 			if shield_effect_instance.has_method("set_effect_size"):
 				shield_effect_instance.set_effect_size(Vector2(36, 36))
 			if shield_effect_instance.has_method("set_effect_lifetime"):

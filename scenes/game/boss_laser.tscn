@@ -1,6 +1,7 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bc5a8dai76lih"]
 
-[ext_resource type="Script" path="res://scripts/game/boss_laser.gd" id="1_bl"]
+[ext_resource type="Script" uid="uid://c4jdm4sq34mlo" path="res://scripts/game/boss_laser.gd" id="1_bl"]
 
-[node name="BossLaser" type="Area2D"]
+[node name="BossLaser" type="Area2D" unique_id=1659349163]
+texture_filter = 1
 script = ExtResource("1_bl")

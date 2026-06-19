@@ -3,19 +3,35 @@ extends Area2D
 var owner_player: Node2D = null
 var damage := 8
 var orbit_radius := 125.0
-var collision_radius := 15.0
+var collision_radius := 13.0
 var rotation_speed := PI
 var angle_offset := 0.0
 
 var _hit_cooldowns: Dictionary = {}
+var _sprite: AnimatedSprite2D
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
+	_sprite = $AnimatedSprite2D
+	_sprite.scale = Vector2(2.0, 2.0)
+	var sf := SpriteFrames.new()
+	sf.add_animation("spin")
+	sf.set_animation_loop("spin", true)
+	sf.set_animation_speed("spin", 20.0)
+	var tex := load("res://assets/sprites/ruler-Sheet.png")
+	var atlas := AtlasTexture.new()
+	atlas.atlas = tex
+	for i in range(8):
+		atlas.region = Rect2(i * 13, 0, 13, 13)
+		sf.add_frame("spin", atlas.duplicate())
+	_sprite.sprite_frames = sf
+	_sprite.flip_h = true
+	_sprite.play("spin")
+	_update_collision_shape()
 
 func setup(player: Node2D, idx: int, count: int) -> void:
 	owner_player = player
 	angle_offset = (TAU / max(count, 1)) * idx
-	_update_visual()
 
 func _physics_process(delta: float) -> void:
 	if owner_player == null or not is_instance_valid(owner_player):
@@ -53,15 +69,11 @@ func set_params(p_damage: float, p_orbit_radius: float, p_collision_radius: floa
 	collision_radius = p_collision_radius
 	rotation_speed = p_rotation_speed
 	_update_collision_shape()
-	_update_visual()
 
 func _update_collision_shape() -> void:
-	var shape: RectangleShape2D = $CollisionShape2D.shape as RectangleShape2D
+	var shape: CircleShape2D = $CollisionShape2D.shape as CircleShape2D
 	if shape != null:
-		shape.size = Vector2(collision_radius * 2.0, 6.0)
-
-func _update_visual() -> void:
-	var visual: ColorRect = $Visual
-	if visual != null:
-		visual.size = Vector2(collision_radius * 2.0, 6.0)
-		visual.position = Vector2(-collision_radius, -3.0)
+		shape.radius = collision_radius
+	if _sprite != null:
+		var sprite_scale: float = collision_radius / 13.0
+		_sprite.scale = Vector2(sprite_scale, sprite_scale)
