@@ -5,6 +5,9 @@
 [sub_resource type="CircleShape2D" id="CircleShape2D_boss1"]
 radius = 16.0
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_boss1_outer"]
+radius = 18.0
+
 [node name="Boss1" type="CharacterBody2D" unique_id=1850569289 groups=["enemy", "boss"]]
 collision_layer = 1
 script = ExtResource("1_nr2pe")
@@ -15,3 +18,6 @@ texture_filter = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1729362172]
 shape = SubResource("CircleShape2D_boss1")
+
+[node name="CollisionShape2DOuter" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_boss1_outer")

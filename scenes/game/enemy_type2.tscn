@@ -1,13 +1,12 @@
-[gd_scene format=3 uid="uid://bfhyg5taurad5"]
+[gd_scene format=3]
 
-[ext_resource type="Script" uid="uid://toq0o7gjibfs" path="res://scripts/game/enemy_type1.gd" id="1_ibalm"]
+[ext_resource type="Script" path="res://scripts/game/enemy_type2.gd" id="1_e2"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_e2"]
 radius = 15.0
 
-[node name="EnemyType2" type="CharacterBody2D" unique_id=1428529883 groups=["enemy"]]
-texture_filter = 1
-script = ExtResource("1_ibalm")
+[node name="EnemyType2" type="CharacterBody2D" groups=["enemy"]]
+script = ExtResource("1_e2")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=923106411]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_e2")

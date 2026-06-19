@@ -116,6 +116,8 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_update_status_effects(delta)
+	if _hurt_timer > 0.0:
+		_hurt_timer = maxf(_hurt_timer - delta, 0.0)
 
 	match current_state:
 		BossState.CHASE:
@@ -163,6 +165,7 @@ func _process_charge(delta: float) -> void:
 	_anim_timer -= delta
 	if charge_indicator != null:
 		_update_charge_indicator()
+	_apply_skill_visual()
 	if _anim_timer <= 0.0 and current_state == BossState.CHARGE:
 		if _animated_sprite != null:
 			_animated_sprite.play("dash")
@@ -181,6 +184,7 @@ func _enter_dash_state() -> void:
 
 func _process_dash(delta: float) -> void:
 	state_timer -= delta
+	_apply_skill_visual()
 	if state_timer <= 0.0:
 		_enter_idle_state()
 
@@ -196,14 +200,13 @@ func _enter_idle_state() -> void:
 func _process_idle(delta: float) -> void:
 	state_timer -= delta
 	_anim_timer -= delta
-	if _anim_timer <= 0.0 and current_state == BossState.IDLE:
-		_switch_to_normal_shape()
 	if state_timer <= 0.0:
 		_enter_cooldown_state()
 
 func _enter_cooldown_state() -> void:
 	current_state = BossState.COOLDOWN
 	state_timer = COOLDOWN_DURATION
+	_switch_to_normal_shape()
 	_switch_to_normal_shape()
 
 func _process_cooldown(delta: float) -> void:
@@ -233,6 +236,16 @@ func _play_move_anim() -> void:
 		if target != null and is_instance_valid(target):
 			_animated_sprite.flip_h = target.global_position.x < global_position.x
 		_animated_sprite.rotation = 0.0
+
+func _apply_skill_visual() -> void:
+	var angle: float = locked_direction.angle()
+	if locked_direction.x < 0.0:
+		angle += PI
+	if collision_node != null:
+		collision_node.rotation = angle
+	if _animated_sprite != null:
+		_animated_sprite.rotation = angle
+		_animated_sprite.flip_h = locked_direction.x < 0.0
 
 func _switch_to_skill_shape() -> void:
 	var angle: float = locked_direction.angle()
