@@ -12,14 +12,6 @@ var page_size := 6
 @onready var empty_label: Label = $Panel/VBox/EmptyLabel
 @onready var back_button: Button = $Panel/VBox/BackButton
 @onready var detail_panel: Control = $DetailPanel
-@onready var id_label: Label = $DetailPanel/DetailBox/VBox/InfoRow1/IDLabel
-@onready var result_label: Label = $DetailPanel/DetailBox/VBox/InfoRow1/ResultLabel
-@onready var date_label: Label = $DetailPanel/DetailBox/VBox/InfoRow1/DateLabel
-@onready var level_label: Label = $DetailPanel/DetailBox/VBox/StatsRow1/LevelLabel
-@onready var kills_label: Label = $DetailPanel/DetailBox/VBox/StatsRow1/KillsLabel
-@onready var time_label: Label = $DetailPanel/DetailBox/VBox/StatsRow1/TimeLabel
-@onready var damage_label: Label = $DetailPanel/DetailBox/VBox/StatsRow2/DamageLabel
-@onready var score_label: Label = $DetailPanel/DetailBox/VBox/StatsRow2/ScoreLabel
 @onready var rewards_label: Label = $DetailPanel/DetailBox/VBox/RewardsLabel
 @onready var close_button: Button = $DetailPanel/DetailBox/VBox/CloseButton
 @onready var dim: ColorRect = $DetailPanel/Dim
@@ -37,11 +29,6 @@ func _ready() -> void:
 	prev_button.add_theme_font_size_override("font_size", 33)
 	next_button.add_theme_font_size_override("font_size", 33)
 	back_button.add_theme_font_size_override("font_size", 33)
-	id_label.add_theme_font_size_override("font_size", 33)
-	result_label.add_theme_font_size_override("font_size", 33)
-	date_label.add_theme_font_size_override("font_size", 22)
-	damage_label.add_theme_font_size_override("font_size", 33)
-	score_label.add_theme_font_size_override("font_size", 33)
 	close_button.add_theme_font_size_override("font_size", 33)
 
 func _load_records() -> void:
@@ -189,21 +176,53 @@ func _add_stat(parent: HBoxContainer, text: String, font_size: int = 22) -> void
 	label.add_theme_font_size_override("font_size", font_size)
 	parent.add_child(label)
 
+var _detail_stats_grid: GridContainer = null
+var _detail_stats_grid2: GridContainer = null
+
 func _show_detail(record: Dictionary) -> void:
-	var is_victory: bool = record.get("result", "") == "victory"
+	_clear_detail_dynamic()
+	var vbox: VBoxContainer = $DetailPanel/DetailBox/VBox
 	$DetailPanel/DetailBox/VBox/TitleLabel.add_theme_font_size_override("font_size", 33)
-	id_label.text = "#%d" % record.get("id", 0)
-	id_label.add_theme_font_size_override("font_size", 22)
-	result_label.text = "胜利" if is_victory else "失败"
-	result_label.add_theme_font_size_override("font_size", 44)
-	result_label.add_theme_color_override("font_color", Color(0.3, 0.9, 0.3) if is_victory else Color(0.9, 0.3, 0.3))
-	date_label.text = record.get("date", "")
-	date_label.add_theme_font_size_override("font_size", 22)
-	level_label.visible = false
-	kills_label.visible = false
-	time_label.visible = false
-	damage_label.visible = false
-	score_label.visible = false
+
+	var is_victory: bool = record.get("result", "") == "victory"
+
+	# 第一块：编号 + 结果 + 日期
+	var sep1 := HSeparator.new()
+	vbox.add_child(sep1)
+	vbox.move_child(sep1, 1)
+
+	var row1 := HBoxContainer.new()
+	row1.name = "DetailInfoRow"
+	row1.add_theme_constant_override("separation", 12)
+	vbox.add_child(row1)
+	vbox.move_child(row1, 2)
+
+	var id_lbl := Label.new()
+	id_lbl.text = "#%d" % record.get("id", 0)
+	id_lbl.add_theme_font_size_override("font_size", 22)
+	id_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	row1.add_child(id_lbl)
+
+	var result_lbl := Label.new()
+	result_lbl.text = "胜利" if is_victory else "失败"
+	result_lbl.add_theme_font_size_override("font_size", 44)
+	result_lbl.add_theme_color_override("font_color", Color(0.3, 0.9, 0.3) if is_victory else Color(0.9, 0.3, 0.3))
+	row1.add_child(result_lbl)
+
+	var row1_spacer := Control.new()
+	row1_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row1.add_child(row1_spacer)
+
+	var date_lbl := Label.new()
+	date_lbl.text = record.get("date", "")
+	date_lbl.add_theme_font_size_override("font_size", 22)
+	row1.add_child(date_lbl)
+
+	# 第二块：数值统计
+	var sep2 := HSeparator.new()
+	vbox.add_child(sep2)
+	vbox.move_child(sep2, 3)
+
 	var level_val: int = record.get("level", 1)
 	var kills_val: int = record.get("kills", 0)
 	var time_val: float = record.get("time", 0)
@@ -211,19 +230,33 @@ func _show_detail(record: Dictionary) -> void:
 	var seconds := int(time_val) % 60
 	var damage_val: int = record.get("damage_dealt", 0)
 	var score_val: int = record.get("score", 0)
-	var stats_grid := GridContainer.new()
-	stats_grid.columns = 6
-	stats_grid.add_theme_constant_override("h_separation", 12)
-	stats_grid.add_theme_constant_override("v_separation", 4)
-	var vbox: VBoxContainer = $DetailPanel/DetailBox/VBox
-	var sep2_idx := vbox.get_node("Separator2").get_index()
-	vbox.add_child(stats_grid)
-	vbox.move_child(stats_grid, sep2_idx + 1)
-	_add_grid_pair(stats_grid, "等级：", "Lv.%d" % level_val, 33, 44)
-	_add_grid_pair(stats_grid, "击杀：", "%d" % kills_val, 33, 44)
-	_add_grid_pair(stats_grid, "时间：", "%d:%02d" % [minutes, seconds], 33, 44)
-	_add_grid_pair(stats_grid, "输出：", "%d" % damage_val, 33, 44)
-	_add_grid_pair(stats_grid, "总分：", "%d" % score_val, 33, 44)
+
+	_detail_stats_grid = GridContainer.new()
+	_detail_stats_grid.columns = 6
+	_detail_stats_grid.add_theme_constant_override("h_separation", 12)
+	_detail_stats_grid.add_theme_constant_override("v_separation", 4)
+	vbox.add_child(_detail_stats_grid)
+	vbox.move_child(_detail_stats_grid, 4)
+	_add_grid_pair(_detail_stats_grid, "等级：", "Lv.%d" % level_val, 33, 44)
+	_add_grid_pair(_detail_stats_grid, "击杀：", "%d" % kills_val, 33, 44)
+	_add_grid_pair(_detail_stats_grid, "时间：", "%d:%02d" % [minutes, seconds], 33, 44)
+
+	_detail_stats_grid2 = GridContainer.new()
+	_detail_stats_grid2.columns = 4
+	_detail_stats_grid2.add_theme_constant_override("h_separation", 12)
+	_detail_stats_grid2.add_theme_constant_override("v_separation", 4)
+	vbox.add_child(_detail_stats_grid2)
+	vbox.move_child(_detail_stats_grid2, 5)
+	_add_grid_pair(_detail_stats_grid2, "输出：", "%d" % damage_val, 33, 44)
+	_add_grid_pair(_detail_stats_grid2, "总分：", "%d" % score_val, 33, 44)
+
+	var sep3 := HSeparator.new()
+	vbox.add_child(sep3)
+	vbox.move_child(sep3, 6)
+
+	var sep4 := HSeparator.new()
+	vbox.add_child(sep4)
+	vbox.move_child(sep4, vbox.get_child_count() - 2)
 	var rewards: Array = record.get("rewards", [])
 	if rewards.size() > 0:
 		rewards_label.text = "获得奖励："
@@ -249,12 +282,30 @@ func _show_detail(record: Dictionary) -> void:
 		if rewards_grid != null:
 			rewards_grid.visible = false
 	close_button.add_theme_font_size_override("font_size", 33)
-	$DetailPanel/DetailBox/VBox/StatsRow1.visible = false
-	$DetailPanel/DetailBox/VBox/StatsRow2.visible = false
 	detail_panel.visible = true
 
 func _close_detail() -> void:
 	detail_panel.visible = false
+	_clear_detail_dynamic()
+
+func _clear_detail_dynamic() -> void:
+	if _detail_stats_grid != null and is_instance_valid(_detail_stats_grid):
+		_detail_stats_grid.queue_free()
+		_detail_stats_grid = null
+	if _detail_stats_grid2 != null and is_instance_valid(_detail_stats_grid2):
+		_detail_stats_grid2.queue_free()
+		_detail_stats_grid2 = null
+	var vbox: VBoxContainer = $DetailPanel/DetailBox/VBox
+	var to_remove: Array = []
+	for child in vbox.get_children():
+		if child is HSeparator:
+			to_remove.append(child)
+		elif child is HBoxContainer:
+			to_remove.append(child)
+		elif child is GridContainer and child != $DetailPanel/DetailBox/VBox/RewardsGrid:
+			to_remove.append(child)
+	for node in to_remove:
+		node.queue_free()
 
 func _on_dim_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
