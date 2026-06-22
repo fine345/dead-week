@@ -4,12 +4,12 @@ var boss: Node2D = null
 var max_hp: float = 1000.0
 var current_hp: float = 1000.0
 var display_hp: float = 1000.0
-var bar_width: float = 400.0
-var bar_height: float = 12.0
+var bar_width: float = 504.0
+var bar_height: float = 32.0
 
-@onready var background: ColorRect = $Background
-@onready var lost_bar: ColorRect = $LostHealthBar
-@onready var current_bar: ColorRect = $CurrentHealthBar
+@onready var background = $Background
+@onready var lost_bar = $LostHealthBar
+@onready var current_bar = $CurrentHealthBar
 
 func _ready() -> void:
 	visible = false
@@ -38,16 +38,11 @@ func hide_boss() -> void:
 	visible = false
 
 func _update_bar_visual() -> void:
-	if background != null:
-		background.size = Vector2(bar_width, bar_height)
-		background.position = Vector2.ZERO
 	if lost_bar != null:
 		var lost_ratio := display_hp / max_hp if max_hp > 0 else 0.0
-		lost_bar.size = Vector2(bar_width * lost_ratio, bar_height)
-		lost_bar.position = Vector2.ZERO
-		lost_bar.color = Color(0.6, 0.1, 0.1, 0.8)
+		lost_bar.scale.x = 2.0 * maxf(lost_ratio, 0.01)
+		lost_bar.position.x = -bar_width * lost_ratio * 0.5
 	if current_bar != null:
 		var current_ratio := current_hp / max_hp if max_hp > 0 else 0.0
-		current_bar.size = Vector2(bar_width * current_ratio, bar_height)
-		current_bar.position = Vector2.ZERO
-		current_bar.color = Color(0.8, 0.2, 0.2, 1.0)
+		current_bar.scale.x = 2.0 * maxf(current_ratio, 0.01)
+		current_bar.position.x = -bar_width * current_ratio * 0.5

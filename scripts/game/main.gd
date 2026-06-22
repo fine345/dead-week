@@ -49,16 +49,22 @@ var _key2_pressed := false
 var boss_boundary_active := false
 var boss_boundary_rect := Rect2(Vector2(-440, -600), Vector2(1600, 1600))
 var boss_health_bar: Control = null
+var _last_player_hp := 0
+var _heart_hit_timer := 0.0
 
 @onready var enemy_one_timer: Timer = $EnemyTimer
 @onready var enemy_two_timer: Timer = Timer.new()
 var enemy_three_timer: Timer = null
 var enemy_four_timer: Timer = null
 @onready var hud_info: Label = $HUD/Info
+@onready var time_label: Label = $HUD/TimeLabel
+@onready var hearts: Array = []
+@onready var exp_fill: Sprite2D = $HUD/EXPBar/EXPFill
+@onready var exp_label: Label = $HUD/EXPBar/EXPLabel
 @onready var hud_game_over: Label = $Layer/Panel/GameOver
 @onready var hud_retry_button: Button = $Layer/Panel/RetryButton
 @onready var level_up_panel: Control = $Layer/Panel/LevelUpPanel
-@onready var pause_button: Button = $Layer/Panel/PauseButton
+@onready var pause_button: TextureButton = $Layer/Panel/PauseButton
 @onready var pause_menu: Control = $Layer/Panel/PauseMenu
 @onready var hud_virtual_joystick: Control = $HUD/VirtualJoystick
 @onready var summary_panel: Control = $Layer/Panel/SummaryPanel
@@ -78,6 +84,7 @@ func _ready() -> void:
 		hud_game_over.visible = false
 	if hud_retry_button != null:
 		hud_retry_button.visible = false
+	hearts = [$HUD/Hearts/Heart1, $HUD/Hearts/Heart2, $HUD/Hearts/Heart3, $HUD/Hearts/Heart4, $HUD/Hearts/Heart5]
 	elapsed_time = 0.0
 	enemy_two_unlocked = false
 	summary_shown = false
@@ -479,6 +486,8 @@ func _process(delta: float) -> void:
 			_is_ramping = false
 			Engine.time_scale = 1.0
 	elapsed_time += delta
+	if _heart_hit_timer > 0.0:
+		_heart_hit_timer = maxf(_heart_hit_timer - delta, 0.0)
 	enemy_two_unlocked = elapsed_time >= enemy_time_relief_start
 	_update_spawn_timers()
 	if not boss1_spawned and elapsed_time >= 180.0:
@@ -548,8 +557,32 @@ func _on_reward_selected(reward_id: String) -> void:
 	_update_game_state_ui()
 
 func _update_hud() -> void:
-	if hud_info != null and player != null:
-		hud_info.text = "Time: %.1f\nHP: %d / %d\nEnemies: %d\nExp Orbs: %d\nLV: %d  EXP: %d" % [elapsed_time, player.health, player.max_health, spawned_enemies.size(), spawned_experiences.size(), player.level, player.experience]
+	if player != null:
+		var minutes := int(elapsed_time) / 60
+		var seconds := int(elapsed_time) % 60
+		if time_label != null:
+			time_label.text = "%02d:%02d" % [minutes, seconds]
+		var max_hp: int = player.max_health
+		if player.health < _last_player_hp:
+			_heart_hit_timer = 0.05
+		_last_player_hp = player.health
+		for i in range(hearts.size()):
+			var heart: TextureRect = hearts[i]
+			if heart == null:
+				continue
+			if _heart_hit_timer > 0.0 and i == player.health:
+				heart.texture = preload("res://assets/sprites/ui/heart_hit-Sheet.png")
+			elif i < player.health:
+				heart.texture = preload("res://assets/sprites/ui/heart_full-Sheet.png")
+			else:
+				heart.texture = preload("res://assets/sprites/ui/heart_empty-Sheet.png")
+		if exp_fill != null:
+			var required: int = player._get_required_exp()
+			var exp_ratio := float(player.experience) / float(required) if required > 0 else 0.0
+			exp_fill.scale.x = 2.0 * maxf(exp_ratio, 0.01)
+			exp_fill.position.x = 2.0
+		if exp_label != null:
+			exp_label.text = "Lv.%d  %d/%d" % [player.level, player.experience, player._get_required_exp()]
 	_update_game_state_ui()
 
 func _update_game_state_ui() -> void:
@@ -605,7 +638,8 @@ func _restart_game() -> void:
 	if pause_menu != null:
 		pause_menu.visible = false
 	if pause_button != null:
-		pause_button.text = "暂停"
+		pause_button.texture_normal = preload("res://assets/sprites/ui/pause_btn_normal-Sheet.png")
+		pause_button.texture_pressed = preload("res://assets/sprites/ui/pause_btn_normal_press-Sheet.png")
 	experience_cleanup_enabled = false
 	for enemy in spawned_enemies:
 		if is_instance_valid(enemy):
@@ -718,7 +752,8 @@ func _on_pause_button_pressed() -> void:
 			enemy_two_timer.paused = false
 		if enemy_three_timer != null:
 			enemy_three_timer.paused = false
-		pause_button.text = "暂停"
+		pause_button.texture_normal = preload("res://assets/sprites/ui/pause_btn_normal-Sheet.png")
+		pause_button.texture_pressed = preload("res://assets/sprites/ui/pause_btn_normal_press-Sheet.png")
 		if pause_menu != null:
 			pause_menu.visible = false
 	else:
@@ -729,7 +764,8 @@ func _on_pause_button_pressed() -> void:
 			enemy_two_timer.paused = true
 		if enemy_three_timer != null:
 			enemy_three_timer.paused = true
-		pause_button.text = "继续"
+		pause_button.texture_normal = preload("res://assets/sprites/ui/pause_btn_play-Sheet.png")
+		pause_button.texture_pressed = preload("res://assets/sprites/ui/pause_btn_play_press-Sheet.png")
 		if pause_menu != null:
 			pause_menu.visible = true
 

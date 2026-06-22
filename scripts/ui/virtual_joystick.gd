@@ -2,15 +2,15 @@ extends Control
 
 signal joystick_released(direction: Vector2)
 
-@export var radius := 70.0
+@export var radius := 96.0
 @export var deadzone := 0.2
 @export var action_left := "ui_left"
 @export var action_right := "ui_right"
 @export var action_up := "ui_up"
 @export var action_down := "ui_down"
 
-@onready var base: Control = $Base
-@onready var knob: Control = $Base/Knob
+@onready var base: Sprite2D = $Base
+@onready var knob: Sprite2D = $Knob
 
 var active := false
 var enabled := true
@@ -40,12 +40,11 @@ func _on_joystick_mode_changed(mode: String) -> void:
 
 func _show_fixed() -> void:
 	base.visible = true
-	base.size = Vector2(radius * 2.0, radius * 2.0)
 	var vp_size := get_viewport_rect().size
-	position = Vector2((vp_size.x - base.size.x) / 2.0, vp_size.y - 200.0 - base.size.y)
+	position = Vector2((vp_size.x - radius * 2.0) / 2.0, vp_size.y - 300.0 - radius * 2.0)
 	base.position = Vector2.ZERO
 	base_center = Vector2(radius, radius)
-	knob.position = base_center - knob.size * 0.5
+	knob.position = base_center - Vector2(48, 48)
 
 func set_enabled(value: bool) -> void:
 	enabled = value
@@ -141,11 +140,9 @@ func _is_over_ui(screen_position: Vector2) -> bool:
 
 func _show_joystick_at(screen_position: Vector2) -> void:
 	base.visible = true
-	base.size = Vector2(radius * 2.0, radius * 2.0)
-	position = screen_position - Vector2(radius, radius)
+	position = screen_position - base_center
 	base.position = Vector2.ZERO
-	base_center = Vector2(radius, radius)
-	knob.position = base_center - knob.size * 0.5
+	knob.position = base_center - Vector2(48, 48)
 
 func _update_from_position(screen_position: Vector2) -> void:
 	var local_position := screen_position - position
@@ -153,7 +150,7 @@ func _update_from_position(screen_position: Vector2) -> void:
 	if delta.length() > radius:
 		delta = delta.normalized() * radius
 	input_vector = delta / radius
-	knob.position = base_center + delta - knob.size * 0.5
+	knob.position = base_center + delta - Vector2(48, 48)
 	_apply_input(input_vector)
 
 func _reset_joystick(emit_release := true) -> void:
@@ -165,10 +162,10 @@ func _reset_joystick(emit_release := true) -> void:
 	input_vector = Vector2.ZERO
 	var sm = get_node_or_null("/root/SettingsManager")
 	if sm != null and sm.is_fixed_joystick():
-		knob.position = base_center - knob.size * 0.5
+		knob.position = base_center - Vector2(48, 48)
 	else:
 		base.visible = false
-		knob.position = base_center - knob.size * 0.5
+		knob.position = base_center - Vector2(48, 48)
 	_apply_input(Vector2.ZERO)
 
 func _apply_input(vec: Vector2) -> void:
