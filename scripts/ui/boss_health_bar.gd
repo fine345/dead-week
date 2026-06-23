@@ -7,9 +7,9 @@ var display_hp: float = 1000.0
 var bar_width: float = 504.0
 var bar_height: float = 32.0
 
-@onready var background = $Background
-@onready var lost_bar = $LostHealthBar
-@onready var current_bar = $CurrentHealthBar
+@onready var background: Sprite2D = $Background
+@onready var lost_bar: Sprite2D = $LostHealthBar
+@onready var current_bar: Sprite2D = $CurrentHealthBar
 
 func _ready() -> void:
 	visible = false
@@ -41,8 +41,10 @@ func _update_bar_visual() -> void:
 	if lost_bar != null:
 		var lost_ratio := display_hp / max_hp if max_hp > 0 else 0.0
 		lost_bar.scale.x = 2.0 * maxf(lost_ratio, 0.01)
-		lost_bar.position.x = -bar_width * lost_ratio * 0.5
+		lost_bar.position.x = 4.0
+		lost_bar.position.y = 4.0
 	if current_bar != null:
 		var current_ratio := current_hp / max_hp if max_hp > 0 else 0.0
 		current_bar.scale.x = 2.0 * maxf(current_ratio, 0.01)
-		current_bar.position.x = -bar_width * current_ratio * 0.5
+		current_bar.position.x = 4.0
+		current_bar.position.y = 4.0
