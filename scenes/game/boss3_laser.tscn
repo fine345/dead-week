@@ -3,5 +3,6 @@
 [ext_resource type="Script" uid="uid://b4lg6vaod0i7b" path="res://scripts/game/boss3_laser.gd" id="1_bl"]
 
 [node name="Boss3Laser" type="Area2D" unique_id=1486205874]
+collision_mask = 2
 texture_filter = 1
 script = ExtResource("1_bl")

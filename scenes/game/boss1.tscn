@@ -9,11 +9,13 @@ radius = 32.0
 radius = 36.0
 
 [node name="Boss1" type="CharacterBody2D" unique_id=1850569289 groups=["boss", "enemy"]]
+collision_layer = 4
+collision_mask = 6
 texture_filter = 1
 script = ExtResource("1_nr2pe")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=931369769]
-z_index = 5
+z_index = 10
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1729362172]
 shape = SubResource("CircleShape2D_boss1")

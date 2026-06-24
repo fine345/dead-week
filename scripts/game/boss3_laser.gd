@@ -16,6 +16,14 @@ func _physics_process(delta: float) -> void:
 		return
 	if has_meta("rotation_speed"):
 		rotation += float(get_meta("rotation_speed")) * delta
+	for body in get_overlapping_bodies():
+		if body == null or not is_instance_valid(body):
+			continue
+		if body.is_in_group("enemy"):
+			continue
+		if not body.has_method("take_damage"):
+			continue
+		body.take_damage(1)
 
 func _on_body_entered(body: Node) -> void:
 	if body == null or not body.has_method("take_damage"):

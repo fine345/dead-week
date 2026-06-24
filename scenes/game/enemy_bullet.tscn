@@ -7,6 +7,7 @@ radius = 4.5
 height = 18.0
 
 [node name="EnemyBullet" type="Area2D" unique_id=1246911288 groups=["enemy_bullet"]]
+collision_mask = 2
 texture_filter = 1
 script = ExtResource("1_eb")
 

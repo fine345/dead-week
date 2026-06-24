@@ -249,7 +249,7 @@ func level_up_reward(levels: int = 1) -> void:
 func apply_reward_effect(reward_id: String) -> void:
 	match reward_id:
 		"bullet_damage":
-			bullet_damage_multiplier += 0.3
+			bullet_damage_multiplier += 0.5
 		"pickup_range":
 			pickup_range *= 1.75
 		"attack_speed":
@@ -483,8 +483,8 @@ func _physics_process(delta: float) -> void:
 		position += velocity * delta
 		if dash_timer <= 0.0:
 			is_dashing = false
-			collision_layer = 1
-			collision_mask = 2
+			collision_layer = 2
+			collision_mask = 5
 			var col: CollisionShape2D = $CollisionShape2D
 			if col != null:
 				col.disabled = false

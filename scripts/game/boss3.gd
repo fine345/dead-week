@@ -50,7 +50,7 @@ func _setup_boss_animations() -> void:
 	add_child(_tassel_pivot)
 	_tassel_sprite = AnimatedSprite2D.new()
 	_tassel_sprite.name = "Tassel"
-	_tassel_sprite.z_index = 5
+	_tassel_sprite.z_index = 10
 	_tassel_sprite.texture_filter = 0
 	_tassel_sprite.scale = Vector2(2.0, 2.0)
 	_tassel_pivot.add_child(_tassel_sprite)

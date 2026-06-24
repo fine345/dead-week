@@ -29,6 +29,14 @@ func _setup_collision() -> void:
 
 func _physics_process(delta: float) -> void:
 	rotation += rotation_speed * delta
+	for body in get_overlapping_bodies():
+		if body == null or not is_instance_valid(body):
+			continue
+		if body.is_in_group("enemy"):
+			continue
+		if not body.has_method("take_damage"):
+			continue
+		body.take_damage(laser_damage)
 
 func _on_body_entered(body: Node) -> void:
 	if body == null or not body.has_method("take_damage"):

@@ -2,6 +2,7 @@ extends Label
 
 func setup(amount: int, color: Color, pos: Vector2) -> void:
 	text = str(amount)
+	z_index = 50
 	add_theme_font_size_override("font_size", 44)
 	add_theme_color_override("font_color", color)
 	add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))

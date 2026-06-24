@@ -61,7 +61,7 @@ func _on_body_entered(body: Node) -> void:
 	if _hit_cooldowns.has(body_id):
 		return
 	_hit_cooldowns[body_id] = now
-	body.take_damage(damage, Color(0.3, 0.9, 0.3))
+	body.take_damage(damage, Color(0.984, 0.949, 0.212, 1.0))
 
 func set_params(p_damage: float, p_orbit_radius: float, p_collision_radius: float, p_rotation_speed: float) -> void:
 	damage = int(round(p_damage))

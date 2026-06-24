@@ -7,7 +7,7 @@ const ATTRIBUTES := [
 	{
 		"id": "bullet_damage",
 		"name": "练练字吧",
-		"detail": "子弹伤害 +30%",
+		"detail": "子弹伤害 +50%",
 		"type": "attribute",
 		"max_count": 5,
 		"weight": 1.0
