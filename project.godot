@@ -29,9 +29,9 @@ Tap="*uid://bo576yb8eyur6"
 [boot]
 
 boot/splash/image="res://assets/sprites/splash_backgroung.png"
-boot/splash/show_image=true
+boot/splash/show_image=false
 boot/splash/fullsize=true
-boot/splash/minimum_display_time=1.5
+boot/splash/minimum_display_time=0
 boot/splash/show_godot_splash=false
 
 [display]

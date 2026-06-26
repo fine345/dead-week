@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://yge8ljia810w" path="res://scripts/ui/login_screen.gd" id="1_login"]
 [ext_resource type="Texture2D" uid="uid://c3ng5frpbns0s" path="res://assets/sprites/splash_backgroung.png" id="2_vtwjt"]
-[ext_resource type="Texture2D" uid="uid://cr1xfpe0vig6k" path="res://sheets/login_button.png" id="3_login_btn"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/login_button.png" id="3_login_btn"]
 
 [node name="LoginScreen" type="Control" unique_id=552232235]
 layout_mode = 3

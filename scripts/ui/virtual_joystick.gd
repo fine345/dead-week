@@ -30,7 +30,7 @@ func _ready() -> void:
 			_show_fixed()
 		else:
 			base.visible = false
-		knob.visible = false
+			knob.visible = false
 	else:
 		base.visible = false
 		knob.visible = false

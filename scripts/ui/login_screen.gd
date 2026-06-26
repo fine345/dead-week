@@ -22,6 +22,11 @@ func _ready() -> void:
 		Tap.anti_timeout.connect(_on_anti_timeout)
 		Tap.init_ok.connect(_on_init_ok)
 		_status("SDK 初始化中...")
+		get_tree().create_timer(5.0).timeout.connect(func():
+			if not _sdk_ready:
+				_sdk_ready = true
+				_show_login_button()
+		)
 	else:
 		_status("TapTap SDK 不可用，跳过登录")
 		get_tree().create_timer(1.0).timeout.connect(func(): get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn"))
